@@ -9,6 +9,7 @@ open class AnimSprite(
     resId: Int,
     var fps: Float,
     frameCount: Int = 0,
+    protected val columns: Int = 1
 ) : Sprite(gctx, resId) {
     protected var frameCount = 0
         set(value) {
@@ -22,8 +23,9 @@ open class AnimSprite(
                 frameHeight = imageHeight
                 field = imageWidth / imageHeight
             } else {
-                frameWidth = imageWidth / value
-                frameHeight = imageHeight
+                frameWidth = imageWidth / columns
+                val rows = (value + columns - 1) / columns
+                frameHeight = imageHeight / rows
                 field = value
             }
         }
@@ -44,11 +46,15 @@ open class AnimSprite(
         // 별도 time 누적 없이 생성 시각과 현재 시각 차이로 index 를 구한다.
         val time = (System.currentTimeMillis() - createdOn) / 1000f
         val frameIndex = ((time * fps).toInt()) % frameCount
+
+        val col = frameIndex % columns
+        val row = frameIndex / columns
+
         srcRect?.set(
-            frameIndex * frameWidth,
-            0,
-            (frameIndex + 1) * frameWidth,
-            frameHeight,
+            col * frameWidth,
+            row * frameHeight,
+            (col + 1) * frameWidth,
+            (row + 1) * frameHeight,
         )
         canvas.drawBitmap(bitmap, srcRect, dstRect, null)
     }
