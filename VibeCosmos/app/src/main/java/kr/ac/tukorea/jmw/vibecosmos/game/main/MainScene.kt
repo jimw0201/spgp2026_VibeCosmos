@@ -27,7 +27,7 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_DOWN) {
-            player.attackUp()
+            player.attackDown()
         }
         return super.onTouchEvent(event)
     }
