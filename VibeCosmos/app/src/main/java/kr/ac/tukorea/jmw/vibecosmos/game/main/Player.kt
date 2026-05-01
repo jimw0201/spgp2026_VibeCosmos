@@ -29,10 +29,10 @@ class Player(gctx: GameContext): AnimSprite(
             if (field == value) return
             field = value
 
-            val (resId, frameCount, scale, targetFps) = when (value) {
-                State.RUN -> arrayOf(R.mipmap.player_run, 32, 1.0f, 60f)
-                State.UP_ATK -> arrayOf(R.mipmap.player_up_atk, 30, 1.3f, 90f)
-                State.DOWN_ATK -> arrayOf(R.mipmap.player_down_atk, 22, 1.3f, 90f)
+            val (resId, frameCount, scale, targetFps, targetY) = when (value) {
+                State.RUN -> arrayOf(R.mipmap.player_run, 32, 1.0f, 60f, 500f)
+                State.UP_ATK -> arrayOf(R.mipmap.player_up_atk, 30, 1.3f, 90f, 300f)
+                State.DOWN_ATK -> arrayOf(R.mipmap.player_down_atk, 22, 1.3f, 90f, 500f)
             }
 
             bitmap = gctx.res.getBitmap(resId as Int)
@@ -41,6 +41,8 @@ class Player(gctx: GameContext): AnimSprite(
 
             this.width = WIDTH * (scale as Float)
             this.height = HEIGHT * scale
+
+            setCenter(200f, targetY as Float)
 
             this.stateStartTime = System.currentTimeMillis()
         }
