@@ -1,5 +1,6 @@
 package kr.ac.tukorea.jmw.vibecosmos.game.main
 
+import android.view.MotionEvent
 import kr.ac.tukorea.jmw.a2dg.scene.Scene
 import kr.ac.tukorea.jmw.a2dg.view.GameContext
 import kr.ac.tukorea.jmw.a2dg.objects.HorzScrollBackground
@@ -12,12 +13,22 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         BG, PLAYER
     }
     override val clipsRect = true
+
+    val player = Player(gctx)
+
     override val world = World(Layer.entries.toTypedArray()).apply {
         listOf(
             R.mipmap.stage_bg to -150f,
         ).forEach { (resId, speed) ->
             add(HorzScrollBackground(gctx, resId, speed), Layer.BG)
         }
-        add(Player(gctx), Layer.PLAYER)
+        add(player, Layer.PLAYER)
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (event.action == MotionEvent.ACTION_DOWN) {
+            player.attackUp()
+        }
+        return super.onTouchEvent(event)
     }
 }
