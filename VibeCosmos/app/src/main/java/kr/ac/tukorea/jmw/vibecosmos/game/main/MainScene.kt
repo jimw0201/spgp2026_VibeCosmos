@@ -9,9 +9,12 @@ import kr.ac.tukorea.jmw.vibecosmos.R
 
 
 class MainScene(gctx: GameContext) : Scene(gctx) {
+    enum class Layer {
+        BG, PLAYER
+    }
     override val clipsRect = true
-    override val world = World(arrayOf(0)).apply {
-        add(HorzScrollBackground(gctx, R.mipmap.stage_bg, -150f), 0)
-        add(Player(gctx), 0)
+    override val world = World(Layer.entries.toTypedArray()).apply {
+        add(HorzScrollBackground(gctx, R.mipmap.stage_bg, -150f), Layer.BG)
+        add(Player(gctx), Layer.PLAYER)
     }
 }
