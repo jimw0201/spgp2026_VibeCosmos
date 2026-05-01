@@ -5,7 +5,7 @@ import android.graphics.Rect
 import kr.ac.tukorea.jmw.a2dg.view.GameContext
 
 open class AnimSprite(
-    private val gctx: GameContext,
+    protected val gctx: GameContext,
     resId: Int,
     var fps: Float,
     frameCount: Int = 0,
