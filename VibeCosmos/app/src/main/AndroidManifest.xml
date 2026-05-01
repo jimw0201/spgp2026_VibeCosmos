@@ -12,6 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.VibeCosmos">
         <activity
+            android:name=".VibeCosmosActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
