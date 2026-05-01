@@ -24,4 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "VibeCosmos"
 include(":app")
- 
+include(":a2dg")
