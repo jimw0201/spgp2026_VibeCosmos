@@ -26,8 +26,17 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (event.action == MotionEvent.ACTION_DOWN) {
-            player.attackDown()
+        val screenCenter = gctx.view.width / 2
+        if (event.x > screenCenter) {
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                player.attackDown()
+                return true
+            }
+        } else {
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                player.attackUp()
+                return true
+            }
         }
         return super.onTouchEvent(event)
     }
