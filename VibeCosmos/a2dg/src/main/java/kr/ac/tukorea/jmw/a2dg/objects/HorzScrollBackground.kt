@@ -3,7 +3,7 @@ package kr.ac.tukorea.jmw.a2dg.objects
 import android.graphics.Canvas
 import kr.ac.tukorea.jmw.a2dg.view.GameContext
 
-class HorzScrollBackground(
+open class HorzScrollBackground(
     gctx: GameContext,
     resId: Int,
     private val speed: Float,
