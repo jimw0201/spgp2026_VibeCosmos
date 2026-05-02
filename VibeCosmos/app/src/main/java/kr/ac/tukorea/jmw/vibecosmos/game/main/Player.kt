@@ -1,7 +1,9 @@
 package kr.ac.tukorea.jmw.vibecosmos.game.main
 
 import android.graphics.Canvas
+import android.graphics.RectF
 import kr.ac.tukorea.jmw.a2dg.objects.AnimSprite
+import kr.ac.tukorea.jmw.a2dg.objects.IBoxCollidable
 import kr.ac.tukorea.jmw.a2dg.view.GameContext
 import kr.ac.tukorea.jmw.vibecosmos.R
 
@@ -11,7 +13,8 @@ class Player(gctx: GameContext): AnimSprite(
     60f,
     frameCount = 32,
     columns = 8
-    ) {
+    ), IBoxCollidable {
+    override val collisionRect: RectF get() = dstRect
     enum class State {
         RUN, UP_ATK, DOWN_ATK,
     }

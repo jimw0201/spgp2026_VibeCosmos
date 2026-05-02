@@ -1,12 +1,16 @@
 package kr.ac.tukorea.jmw.vibecosmos.game.main
 
+import android.graphics.RectF
+import kr.ac.tukorea.jmw.a2dg.objects.IBoxCollidable
 import kr.ac.tukorea.jmw.a2dg.objects.IRecyclable
 import kr.ac.tukorea.jmw.a2dg.objects.Sprite
 import kr.ac.tukorea.jmw.a2dg.view.GameContext
 import kr.ac.tukorea.jmw.vibecosmos.R
 
-class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable {
+class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCollidable {
     var lane: Player.State = Player.State.RUN
+
+    override val collisionRect: RectF get() = dstRect
 
     override fun onRecycle() {
 
