@@ -4,10 +4,8 @@ import android.view.MotionEvent
 import kr.ac.tukorea.jmw.a2dg.scene.Scene
 import kr.ac.tukorea.jmw.a2dg.view.GameContext
 import kr.ac.tukorea.jmw.a2dg.objects.HorzScrollBackground
-import kr.ac.tukorea.jmw.a2dg.objects.Sprite
 import kr.ac.tukorea.jmw.a2dg.scene.World
 import kr.ac.tukorea.jmw.vibecosmos.R
-
 
 class MainScene(gctx: GameContext) : Scene(gctx) {
     enum class Layer {
@@ -17,10 +15,10 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
 
     private val player = Player(gctx)
     private var spawnTimer = 0f
+    private val notePool = mutableListOf<Note>()
 
     override val world = World(Layer.entries.toTypedArray()).apply {
         listOf(
-            // R.mipmap.stage_bg to -150f,
             R.mipmap.stage_bg1 to -150f,
             R.mipmap.stage_bg3 to -200f,
             R.mipmap.stage_bg2 to -150f,
@@ -35,45 +33,47 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
 
         val elapsedSeconds = gctx.frameTime
         spawnTimer += elapsedSeconds
+
         if (spawnTimer > 1.5f) {
-            spawnNote()
+            spawnNoteWithPooling()
             spawnTimer = 0f
         }
-        
-        val notes = world.objectsAt(Layer.NOTES)
 
+        val notes = world.objectsAt(Layer.NOTES)
         var i = 0
         while (i < notes.size) {
-            val note = notes[i] as? Sprite
+            val note = notes[i] as? Note
 
             if (note != null && note.x < -100f) {
                 world.remove(note, Layer.NOTES)
+                notePool.add(note)
             } else {
                 i++
             }
         }
     }
 
-    private fun spawnNote() {
+    private fun spawnNoteWithPooling() {
         val randomLane = if (Math.random() > 0.5) Player.State.UP_ATK else Player.State.DOWN_ATK
 
-        world.add(Note(gctx, randomLane), Layer.NOTES)
+        val note = if (notePool.isNotEmpty()) {
+            notePool.removeAt(0).apply { reset(randomLane) }
+        } else {
+            Note(gctx).apply { reset(randomLane) }
+        }
+
+        world.add(note, Layer.NOTES)
     }
 
-
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (event.action != MotionEvent.ACTION_DOWN) return super.onTouchEvent(event)
+
         val screenCenter = gctx.view.width / 2
         if (event.x > screenCenter) {
-            if (event.action == MotionEvent.ACTION_DOWN) {
-                player.attackDown()
-                return true
-            }
+            player.attackDown()
         } else {
-            if (event.action == MotionEvent.ACTION_DOWN) {
-                player.attackUp()
-                return true
-            }
+            player.attackUp()
         }
-        return super.onTouchEvent(event)
+        return true
     }
 }
