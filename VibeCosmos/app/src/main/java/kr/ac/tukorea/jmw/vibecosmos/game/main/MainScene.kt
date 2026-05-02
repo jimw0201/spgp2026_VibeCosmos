@@ -1,5 +1,7 @@
 package kr.ac.tukorea.jmw.vibecosmos.game.main
 
+import android.media.AudioAttributes
+import android.media.SoundPool
 import android.view.MotionEvent
 import kr.ac.tukorea.jmw.a2dg.scene.Scene
 import kr.ac.tukorea.jmw.a2dg.view.GameContext
@@ -27,6 +29,24 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
     var score = 0
     // 현재 연속 콤보 수
     var combo = 0
+
+    // SoundPool 및 사운드 ID 변수 선언
+    private val soundPool: SoundPool
+    private var hitSoundId: Int = 0
+
+    init {
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_GAME)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        
+        soundPool = SoundPool.Builder()
+            .setMaxStreams(5)
+            .setAudioAttributes(audioAttributes)
+            .build()
+
+        hitSoundId = soundPool.load(gctx.view.context, R.raw.hitsound_000, 1)
+    }
 
     // --- UI 및 게임 요소 그리기용 Paint 설정 ---
     // 스코어
@@ -181,11 +201,13 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
                 minDistance < 40f -> {
                     lastJudgment = "PERFECT"
                     combo++
+                    playHitSound()
                     100
                 }
                 minDistance < 100f -> {
                     lastJudgment = "GREAT"
                     combo++
+                    playHitSound()
                     50
                 }
                 else -> {
@@ -200,6 +222,14 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
             score += (baseScore * multiplier).toInt()
 
             world.remove(closestNote, Layer.NOTES)
+        }
+    }
+
+    // 사운드 재생 함수
+    private fun playHitSound() {
+        if (hitSoundId != 0) {
+            // 사운드ID, 왼쪽 볼륨, 오른쪽 볼륨, 우선순위, 반복여부, 재생속도
+            soundPool.play(hitSoundId, 1.0f, 1.0f, 1, 0, 1.0f)
         }
     }
 
