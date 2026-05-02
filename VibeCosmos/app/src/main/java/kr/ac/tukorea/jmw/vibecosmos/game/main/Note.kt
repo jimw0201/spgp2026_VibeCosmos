@@ -1,11 +1,16 @@
 package kr.ac.tukorea.jmw.vibecosmos.game.main
 
+import kr.ac.tukorea.jmw.a2dg.objects.IRecyclable
 import kr.ac.tukorea.jmw.a2dg.objects.Sprite
 import kr.ac.tukorea.jmw.a2dg.view.GameContext
 import kr.ac.tukorea.jmw.vibecosmos.R
 
-class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1) {
+class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable {
     var lane: Player.State = Player.State.RUN
+
+    override fun onRecycle() {
+
+    }
 
     init {
         width = 100f

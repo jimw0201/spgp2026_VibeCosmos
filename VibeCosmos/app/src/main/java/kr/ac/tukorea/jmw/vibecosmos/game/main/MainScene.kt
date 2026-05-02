@@ -15,7 +15,6 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
 
     private val player = Player(gctx)
     private var spawnTimer = 0f
-    private val notePool = mutableListOf<Note>()
 
     override val world = World(Layer.entries.toTypedArray()).apply {
         listOf(
@@ -43,10 +42,8 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         var i = 0
         while (i < notes.size) {
             val note = notes[i] as? Note
-
             if (note != null && note.x < -100f) {
                 world.remove(note, Layer.NOTES)
-                notePool.add(note)
             } else {
                 i++
             }
@@ -55,12 +52,9 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
 
     private fun spawnNoteWithPooling() {
         val randomLane = if (Math.random() > 0.5) Player.State.UP_ATK else Player.State.DOWN_ATK
+        val note = world.obtain(Note::class.java) ?: Note(gctx)
 
-        val note = if (notePool.isNotEmpty()) {
-            notePool.removeAt(0).apply { reset(randomLane) }
-        } else {
-            Note(gctx).apply { reset(randomLane) }
-        }
+        note.reset(randomLane)
 
         world.add(note, Layer.NOTES)
     }
