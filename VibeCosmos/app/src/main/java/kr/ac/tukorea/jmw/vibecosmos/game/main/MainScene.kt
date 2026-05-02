@@ -21,6 +21,8 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
 
     var score = 0
 
+    var combo = 0
+
     private val scorePaint = android.graphics.Paint().apply {
         color = android.graphics.Color.WHITE
         textSize = 60f
@@ -56,6 +58,13 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         textAlign = android.graphics.Paint.Align.CENTER
     }
 
+    private val comboPaint = android.graphics.Paint().apply {
+        color = android.graphics.Color.YELLOW
+        textSize = 80f
+        isFakeBoldText = true
+        textAlign = android.graphics.Paint.Align.CENTER
+    }
+
     private val TARGET_X = 400f
     private val UPPER_LANE_Y = 300f
     private val LOWER_LANE_Y = 500f
@@ -79,6 +88,10 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
 
         canvas.drawCircle(TARGET_X, UPPER_LANE_Y, 40f, upperMarkerPaint)
         canvas.drawCircle(TARGET_X, LOWER_LANE_Y, 40f, lowerMarkerPaint)
+
+        if (combo > 0) {
+            canvas.drawText("${combo} COMBO", 800f, 550f, comboPaint)
+        }
 
         if (lastJudgment.isNotEmpty()) {
             canvas.drawText(lastJudgment, 800f, 450f, judgmentPaint)
@@ -108,18 +121,14 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         var i = 0
         while (i < notes.size) {
             val note = notes[i] as? Note
-            if (note != null) {
-                if (note.x < -100f) {
-                    lastJudgment = "MISS"
-                    judgmentTimer = 0f
+            if (note != null && note.x < -100f) {
+                lastJudgment = "MISS"
+                judgmentTimer = 0f
 
-                    player.hp -= 10
-                    if (player.hp < 0) player.hp = 0
+                combo = 0
+                player.hp -= 10
 
-                    world.remove(note, Layer.NOTES)
-                } else {
-                    i++
-                }
+                world.remove(note, Layer.NOTES)
             } else {
                 i++
             }
@@ -134,7 +143,6 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         for (obj in notes) {
             val note = obj as? Note ?: continue
             if (note.lane != attackState) continue
-
             val distance = Math.abs(note.x - TARGET_X)
             if (distance < 200f && distance < minDistance) {
                 minDistance = distance
@@ -144,19 +152,27 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
 
         if (closestNote != null) {
             judgmentTimer = 0f
-            when {
+
+            val baseScore = when {
                 minDistance < 40f -> {
-                    score += 100
                     lastJudgment = "PERFECT"
+                    combo++
+                    100
                 }
                 minDistance < 100f -> {
-                    score += 50
                     lastJudgment = "GREAT"
+                    combo++
+                    50
                 }
                 else -> {
                     lastJudgment = "MISS"
+                    combo = 0
+                    0
                 }
             }
+            
+            val multiplier = 1.0f + (Math.min(combo / 10, 10) * 0.1f)
+            score += (baseScore * multiplier).toInt()
 
             world.remove(closestNote, Layer.NOTES)
         }
