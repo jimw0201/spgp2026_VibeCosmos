@@ -9,12 +9,21 @@ import kr.ac.tukorea.jmw.vibecosmos.R
 
 class MainScene(gctx: GameContext) : Scene(gctx) {
     enum class Layer {
-        BG, PLAYER, NOTES
+        BG, PLAYER, NOTES, UI
     }
     override val clipsRect = true
 
     private val player = Player(gctx)
     private var spawnTimer = 0f
+
+    var score = 0
+
+    private val scorePaint = android.graphics.Paint().apply {
+        color = android.graphics.Color.WHITE
+        textSize = 60f
+        isFakeBoldText = true
+        textAlign = android.graphics.Paint.Align.LEFT
+    }
 
     override val world = World(Layer.entries.toTypedArray()).apply {
         listOf(
@@ -25,6 +34,12 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
             add(HorzScrollBackground(gctx, resId, speed), Layer.BG)
         }
         add(player, Layer.PLAYER)
+    }
+
+    override fun draw(canvas: android.graphics.Canvas) {
+        super.draw(canvas)
+
+        canvas.drawText("Score: $score", 50f, 80f, scorePaint)
     }
 
     override fun update(gctx: GameContext) {
