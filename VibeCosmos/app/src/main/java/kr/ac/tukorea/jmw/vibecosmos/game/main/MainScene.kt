@@ -25,6 +25,13 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         textAlign = android.graphics.Paint.Align.LEFT
     }
 
+    private val hpPaint = android.graphics.Paint().apply {
+        color = android.graphics.Color.RED
+        textSize = 60f
+        isFakeBoldText = true
+        textAlign = android.graphics.Paint.Align.CENTER
+    }
+
     override val world = World(Layer.entries.toTypedArray()).apply {
         listOf(
             R.mipmap.stage_bg1 to -150f,
@@ -40,6 +47,7 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         super.draw(canvas)
 
         canvas.drawText("Score: $score", 50f, 80f, scorePaint)
+        canvas.drawText("HP: ${player.hp}", 800f, 850f, hpPaint)
     }
 
     override fun update(gctx: GameContext) {

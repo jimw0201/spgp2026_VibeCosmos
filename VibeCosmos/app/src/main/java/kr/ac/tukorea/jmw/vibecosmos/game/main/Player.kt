@@ -19,6 +19,8 @@ class Player(gctx: GameContext): AnimSprite(
         RUN, UP_ATK, DOWN_ATK,
     }
 
+    var hp = 100
+
     private var stateStartTime = System.currentTimeMillis()
 
     init {
