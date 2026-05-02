@@ -16,6 +16,9 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
     private val player = Player(gctx)
     private var spawnTimer = 0f
 
+    private var lastJudgment = ""
+    private var judgmentTimer = 0f
+
     var score = 0
 
     private val scorePaint = android.graphics.Paint().apply {
@@ -46,6 +49,13 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         alpha = 180
     }
 
+    private val judgmentPaint = android.graphics.Paint().apply {
+        color = android.graphics.Color.YELLOW
+        textSize = 100f
+        isFakeBoldText = true
+        textAlign = android.graphics.Paint.Align.CENTER
+    }
+
     private val TARGET_X = 400f
     private val UPPER_LANE_Y = 300f
     private val LOWER_LANE_Y = 500f
@@ -69,6 +79,10 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
 
         canvas.drawCircle(TARGET_X, UPPER_LANE_Y, 40f, upperMarkerPaint)
         canvas.drawCircle(TARGET_X, LOWER_LANE_Y, 40f, lowerMarkerPaint)
+
+        if (lastJudgment.isNotEmpty()) {
+            canvas.drawText(lastJudgment, 800f, 450f, judgmentPaint)
+        }
     }
 
     override fun update(gctx: GameContext) {
@@ -76,6 +90,14 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
 
         val elapsedSeconds = gctx.frameTime
         spawnTimer += elapsedSeconds
+
+        if (lastJudgment.isNotEmpty()) {
+            judgmentTimer += elapsedSeconds
+            if (judgmentTimer > 0.8f) {
+                lastJudgment = ""
+                judgmentTimer = 0f
+            }
+        }
 
         if (spawnTimer > 1.5f) {
             spawnNoteWithPooling()
@@ -86,11 +108,57 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         var i = 0
         while (i < notes.size) {
             val note = notes[i] as? Note
-            if (note != null && note.x < -100f) {
-                world.remove(note, Layer.NOTES)
+            if (note != null) {
+                if (note.x < -100f) {
+                    lastJudgment = "MISS"
+                    judgmentTimer = 0f
+
+                    player.hp -= 10
+                    if (player.hp < 0) player.hp = 0
+
+                    world.remove(note, Layer.NOTES)
+                } else {
+                    i++
+                }
             } else {
                 i++
             }
+        }
+    }
+
+    private fun checkHit(attackState: Player.State) {
+        val notes = world.objectsAt(Layer.NOTES)
+        var closestNote: Note? = null
+        var minDistance = Float.MAX_VALUE
+
+        for (obj in notes) {
+            val note = obj as? Note ?: continue
+            if (note.lane != attackState) continue
+
+            val distance = Math.abs(note.x - TARGET_X)
+            if (distance < 200f && distance < minDistance) {
+                minDistance = distance
+                closestNote = note
+            }
+        }
+
+        if (closestNote != null) {
+            judgmentTimer = 0f
+            when {
+                minDistance < 40f -> {
+                    score += 100
+                    lastJudgment = "PERFECT"
+                }
+                minDistance < 100f -> {
+                    score += 50
+                    lastJudgment = "GREAT"
+                }
+                else -> {
+                    lastJudgment = "MISS"
+                }
+            }
+
+            world.remove(closestNote, Layer.NOTES)
         }
     }
 
@@ -107,11 +175,15 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         if (event.action != MotionEvent.ACTION_DOWN) return super.onTouchEvent(event)
 
         val screenCenter = gctx.view.width / 2
-        if (event.x > screenCenter) {
+        val attackState = if (event.x > screenCenter) {
             player.attackDown()
+            Player.State.DOWN_ATK
         } else {
             player.attackUp()
+            Player.State.UP_ATK
         }
+
+        checkHit(attackState)
         return true
     }
 }
