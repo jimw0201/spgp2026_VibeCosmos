@@ -18,7 +18,9 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
 
     override val world = World(Layer.entries.toTypedArray()).apply {
         listOf(
-            R.mipmap.stage_bg to -150f,
+            // R.mipmap.stage_bg to -150f,
+            R.mipmap.stage_bg1 to -150f,
+            R.mipmap.stage_bg2 to -150f,
         ).forEach { (resId, speed) ->
             add(HorzScrollBackground(gctx, resId, speed), Layer.BG)
         }
