@@ -32,6 +32,24 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         textAlign = android.graphics.Paint.Align.CENTER
     }
 
+    private val upperMarkerPaint = android.graphics.Paint().apply {
+        color = android.graphics.Color.CYAN
+        style = android.graphics.Paint.Style.STROKE
+        strokeWidth = 8f
+        alpha = 180
+    }
+
+    private val lowerMarkerPaint = android.graphics.Paint().apply {
+        color = android.graphics.Color.MAGENTA
+        style = android.graphics.Paint.Style.STROKE
+        strokeWidth = 8f
+        alpha = 180
+    }
+
+    private val TARGET_X = 400f
+    private val UPPER_LANE_Y = 300f
+    private val LOWER_LANE_Y = 500f
+
     override val world = World(Layer.entries.toTypedArray()).apply {
         listOf(
             R.mipmap.stage_bg1 to -150f,
@@ -48,6 +66,9 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
 
         canvas.drawText("Score: $score", 50f, 80f, scorePaint)
         canvas.drawText("HP: ${player.hp}", 800f, 850f, hpPaint)
+
+        canvas.drawCircle(TARGET_X, UPPER_LANE_Y, 40f, upperMarkerPaint)
+        canvas.drawCircle(TARGET_X, LOWER_LANE_Y, 40f, lowerMarkerPaint)
     }
 
     override fun update(gctx: GameContext) {
