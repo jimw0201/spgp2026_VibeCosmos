@@ -33,19 +33,23 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
     // SoundPool 및 사운드 ID 변수 선언
     private val soundPool: SoundPool
     private var hitSoundId: Int = 0
+    private var swingUpSoundId: Int = 0
+    private var swingDownSoundId: Int = 0
 
     init {
         val audioAttributes = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_GAME)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build()
-        
+
         soundPool = SoundPool.Builder()
-            .setMaxStreams(5)
+            .setMaxStreams(10)
             .setAudioAttributes(audioAttributes)
             .build()
 
         hitSoundId = soundPool.load(gctx.view.context, R.raw.hitsound_000, 1)
+        swingUpSoundId = soundPool.load(gctx.view.context, R.raw.swing_up, 1)
+        swingDownSoundId = soundPool.load(gctx.view.context, R.raw.swing_down, 1)
     }
 
     // --- UI 및 게임 요소 그리기용 Paint 설정 ---
@@ -225,11 +229,19 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         }
     }
 
-    // 사운드 재생 함수
+    // 공격 사운드 재생 함수
     private fun playHitSound() {
         if (hitSoundId != 0) {
             // 사운드ID, 왼쪽 볼륨, 오른쪽 볼륨, 우선순위, 반복여부, 재생속도
             soundPool.play(hitSoundId, 1.0f, 1.0f, 1, 0, 1.0f)
+        }
+    }
+
+    // 스윙 사운드 재생 함수
+    private fun playSwingSound(soundId: Int) {
+        if (soundId != 0) {
+            // 볼륨과 재생 속도는 취향껏 조절 가능합니다.
+            soundPool.play(soundId, 0.8f, 0.8f, 1, 0, 1.0f)
         }
     }
 
@@ -248,10 +260,13 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         if (event.action != MotionEvent.ACTION_DOWN) return super.onTouchEvent(event)
 
         val screenCenter = gctx.view.width / 2
+
         val attackState = if (event.x > screenCenter) {
+            playSwingSound(swingDownSoundId)
             player.attackDown()
             Player.State.DOWN_ATK
         } else {
+            playSwingSound(swingUpSoundId)
             player.attackUp()
             Player.State.UP_ATK
         }
