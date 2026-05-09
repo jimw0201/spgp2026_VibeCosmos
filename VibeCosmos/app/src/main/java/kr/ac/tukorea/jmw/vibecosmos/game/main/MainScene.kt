@@ -106,6 +106,11 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.action != MotionEvent.ACTION_DOWN) return super.onTouchEvent(event)
 
+        val currentPos = mediaPlayer?.currentPosition ?: 0
+        val laneIdx = if (event.x > gctx.view.width / 2) 1 else 0
+
+        android.util.Log.d("CHART_LOG", "$currentPos | $laneIdx")
+
         val screenCenter = gctx.view.width / 2
 
         val attackState = if (event.x > screenCenter) {
