@@ -14,8 +14,19 @@ class Player(gctx: GameContext): AnimSprite(
     frameCount = 32, // 전체 프레임 수
     columns = 8 // 스프라이트 시트의 가로 열 수
     ), IBoxCollidable {
-    // 충돌 영역으로 현재 화면에 그려지는 영역을 반환
-    override val collisionRect: RectF get() = dstRect
+
+    private val fixedCollisionRect = RectF()
+
+    override val collisionRect: RectF
+        get() {
+            fixedCollisionRect.set(
+                x - WIDTH / 2,
+                y - HEIGHT / 2,
+                x + WIDTH / 2,
+                y + HEIGHT / 2
+            )
+            return fixedCollisionRect
+        }
 
     // 플레이어 행동 상태 정의
     enum class State {
@@ -33,7 +44,7 @@ class Player(gctx: GameContext): AnimSprite(
         width = Player.WIDTH
         height = Player.HEIGHT
 
-        // 초기 위치 설젖ㅇ
+        // 초기 위치 설정
         setCenter(200f, 500f)
     }
 
