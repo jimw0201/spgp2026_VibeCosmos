@@ -1,13 +1,12 @@
 package kr.ac.tukorea.jmw.vibecosmos.game.main
 
-import android.media.AudioAttributes
-import android.media.SoundPool
 import android.view.MotionEvent
 import kr.ac.tukorea.jmw.a2dg.scene.Scene
 import kr.ac.tukorea.jmw.a2dg.view.GameContext
 import kr.ac.tukorea.jmw.a2dg.objects.HorzScrollBackground
 import kr.ac.tukorea.jmw.a2dg.scene.World
 import kr.ac.tukorea.jmw.vibecosmos.R
+import kr.ac.tukorea.jmw.vibecosmos.game.manager.NoteManager
 import kr.ac.tukorea.jmw.vibecosmos.game.manager.ScoreManager
 import kr.ac.tukorea.jmw.vibecosmos.game.manager.SoundManager
 
@@ -20,12 +19,11 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
 
     // 플레이어 객체 생성
     private val player = Player(gctx)
-    // 노트 생성 주기 관리 타이머
-    private var spawnTimer = 0f
 
     // 로직 관련 Manager 및 UI 클래스 인스턴스
     private val soundManager = SoundManager(gctx.view.context)
     private val scoreManager = ScoreManager()
+    private lateinit var noteManager: NoteManager
     private val hud = Hud()
 
     // 판정 기준이 되는 상수
@@ -41,6 +39,7 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
             add(HorzScrollBackground(gctx, resId, speed), Layer.BG)
         }
         add(player, Layer.PLAYER)
+        noteManager = NoteManager(gctx, this)
     }
 
     override fun draw(canvas: android.graphics.Canvas) {
@@ -54,26 +53,9 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         val elapsedSeconds = gctx.frameTime
         scoreManager.update(elapsedSeconds)
 
-        spawnTimer += elapsedSeconds
-
-        // 1.5초마다 새로운 노트 생성
-        if (spawnTimer > 1.5f) {
-            spawnNoteWithPooling()
-            spawnTimer = 0f
-        }
-
-        // 화면 왼쪽 밖으로 벗어난 노트를 체크하여 MISS 처리
-        val notes = world.objectsAt(Layer.NOTES)
-        var i = 0
-        while (i < notes.size) {
-            val note = notes[i] as? Note
-            if (note != null && note.x < -100f) {
-                scoreManager.onMiss()
-                player.hp -= 10
-                world.remove(note, Layer.NOTES)
-            } else {
-                i++
-            }
+        noteManager.update(elapsedSeconds) {
+            scoreManager.onMiss()
+            player.hp -= 10
         }
     }
 
@@ -104,16 +86,6 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
             }
             world.remove(closestNote, Layer.NOTES)
         }
-    }
-
-    // 객체 풀링을 사용하여 노트를 생성하고 랜덤 레인에 배치
-    private fun spawnNoteWithPooling() {
-        val randomLane = if (Math.random() > 0.5) Player.State.UP_ATK else Player.State.DOWN_ATK
-        val note = world.obtain(Note::class.java) ?: Note(gctx)
-
-        note.reset(randomLane)
-
-        world.add(note, Layer.NOTES)
     }
 
     // 터치 입력 처리
