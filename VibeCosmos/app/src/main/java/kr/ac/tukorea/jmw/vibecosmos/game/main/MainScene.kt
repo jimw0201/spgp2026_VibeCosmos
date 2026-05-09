@@ -8,6 +8,7 @@ import kr.ac.tukorea.jmw.a2dg.view.GameContext
 import kr.ac.tukorea.jmw.a2dg.objects.HorzScrollBackground
 import kr.ac.tukorea.jmw.a2dg.scene.World
 import kr.ac.tukorea.jmw.vibecosmos.R
+import kr.ac.tukorea.jmw.vibecosmos.game.manager.ScoreManager
 import kr.ac.tukorea.jmw.vibecosmos.game.manager.SoundManager
 
 class MainScene(gctx: GameContext) : Scene(gctx) {
@@ -21,17 +22,10 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
     private val player = Player(gctx)
     // 노트 생성 주기 관리 타이머
     private var spawnTimer = 0f
-    // 화면에 표시할 판정 텍스트
-    private var lastJudgment = ""
-    // 판정 텍스트 노출 시간 관리
-    private var judgmentTimer = 0f
 
-    // 현재 점수
-    var score = 0
-    // 현재 연속 콤보 수
-    var combo = 0
-
+    // 로직 관련 Manager 인스턴스
     private val soundManager = SoundManager(gctx.view.context)
+    private val scoreManager = ScoreManager()
 
     // --- UI 및 게임 요소 그리기용 Paint 설정 ---
     // 스코어
@@ -103,7 +97,7 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         super.draw(canvas)
 
         // 점수 및 HP 표시
-        canvas.drawText("Score: $score", 50f, 80f, scorePaint)
+        canvas.drawText("Score: ${scoreManager.score}", 50f, 80f, scorePaint)
         canvas.drawText("HP: ${player.hp}", 800f, 850f, hpPaint)
 
         // 타격 지점을 시각적으로 보여주는 가이드 원 표시
@@ -111,13 +105,13 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         canvas.drawCircle(TARGET_X, LOWER_LANE_Y, 40f, lowerMarkerPaint)
 
         // 콤보가 있을 대만 화면에 표시
-        if (combo > 0) {
-            canvas.drawText("${combo} COMBO", 800f, 550f, comboPaint)
+        if (scoreManager.combo > 0) {
+            canvas.drawText("${scoreManager.combo} COMBO", 800f, 550f, comboPaint)
         }
 
         // 최신 판정 결과를 잠시 동안 화면에 표시
-        if (lastJudgment.isNotEmpty()) {
-            canvas.drawText(lastJudgment, 800f, 450f, judgmentPaint)
+        if (scoreManager.lastJudgment.isNotEmpty()) {
+            canvas.drawText(scoreManager.lastJudgment, 800f, 450f, judgmentPaint)
         }
     }
 
@@ -125,16 +119,9 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         super.update(gctx)
 
         val elapsedSeconds = gctx.frameTime
-        spawnTimer += elapsedSeconds
+        scoreManager.update(elapsedSeconds)
 
-        // 판정 텍스트가 0.8초 동안만 보이도록
-        if (lastJudgment.isNotEmpty()) {
-            judgmentTimer += elapsedSeconds
-            if (judgmentTimer > 0.8f) {
-                lastJudgment = ""
-                judgmentTimer = 0f
-            }
-        }
+        spawnTimer += elapsedSeconds
 
         // 1.5초마다 새로운 노트 생성
         if (spawnTimer > 1.5f) {
@@ -148,12 +135,8 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         while (i < notes.size) {
             val note = notes[i] as? Note
             if (note != null && note.x < -100f) {
-                lastJudgment = "MISS"
-                judgmentTimer = 0f
-
-                combo = 0
+                scoreManager.onMiss()
                 player.hp -= 10
-
                 world.remove(note, Layer.NOTES)
             } else {
                 i++
@@ -180,32 +163,12 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
 
         // 유효 거리 내에 노트가 있다면 점수 계산
         if (closestNote != null) {
-            judgmentTimer = 0f
+            // 판정 및 점수 추가 위임
+            val isHit = scoreManager.addScore(minDistance)
 
-            val baseScore = when {
-                minDistance < 40f -> {
-                    lastJudgment = "PERFECT"
-                    combo++
-                    soundManager.playHit()
-                    100
-                }
-                minDistance < 100f -> {
-                    lastJudgment = "GREAT"
-                    combo++
-                    soundManager.playHit()
-                    50
-                }
-                else -> {
-                    lastJudgment = "MISS"
-                    combo = 0
-                    0
-                }
+            if (isHit) {
+                soundManager.playHit()
             }
-
-            // 콤보가 높을수록 보너스 점수 붑여
-            val multiplier = 1.0f + (Math.min(combo / 10, 10) * 0.1f)
-            score += (baseScore * multiplier).toInt()
-
             world.remove(closestNote, Layer.NOTES)
         }
     }
