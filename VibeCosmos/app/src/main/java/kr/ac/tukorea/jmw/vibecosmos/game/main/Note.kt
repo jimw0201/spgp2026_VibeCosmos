@@ -29,7 +29,7 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
     fun reset(lane: Player.State, speed: Float) {
         this.lane = lane
         this.speed = speed
-        // 레인 종류에 따라 Y축 위치 겨ㅕㅕㄹ정
+        // 레인 종류에 따라 Y축 위치 결정
         val targetY = if (lane == Player.State.UP_ATK) 300f else 500f
 
         // 화면 오른쪽 끝에서 시작하도록 설정

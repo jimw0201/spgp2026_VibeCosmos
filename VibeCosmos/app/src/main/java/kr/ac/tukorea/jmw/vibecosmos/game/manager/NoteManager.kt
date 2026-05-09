@@ -43,11 +43,9 @@ class NoteManager(
         }
     }
 
-    fun update(elapsedSeconds: Float, onMiss: () -> Unit) {
-        // 시간 업데이트
-        currentTimeMs += (elapsedSeconds * 1000).toLong()
+    fun update(musicTimeMs: Long, onMiss: () -> Unit) {
+        currentTimeMs = musicTimeMs
 
-        // 현재 시간에 맞는 노트를 큐에서 꺼내 생성
         while (noteQueue.isNotEmpty() && noteQueue.peek()!!.timeMs <= currentTimeMs) {
             val info = noteQueue.poll()!!
             spawnNote(info.lane)

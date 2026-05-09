@@ -10,6 +10,7 @@ import kr.ac.tukorea.jmw.vibecosmos.game.data.SongConfig
 import kr.ac.tukorea.jmw.vibecosmos.game.manager.NoteManager
 import kr.ac.tukorea.jmw.vibecosmos.game.manager.ScoreManager
 import kr.ac.tukorea.jmw.vibecosmos.game.manager.SoundManager
+import android.media.MediaPlayer
 
 class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
     // 그리기 순서를 결정하는 레이어 정의
@@ -25,10 +26,20 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
     private val soundManager = SoundManager(gctx.view.context)
     private val scoreManager = ScoreManager()
     private lateinit var noteManager: NoteManager
+
+    private var mediaPlayer: MediaPlayer? = null
     private val hud = Hud()
 
     // 판정 기준이 되는 상수
     private val TARGET_X = 400f
+
+    init {
+        // config에 저장된 musicResId를 가져와서 재생 시작
+        mediaPlayer = MediaPlayer.create(gctx.view.context, config.musicResId).apply {
+            isLooping = false
+            start()
+        }
+    }
 
     // 게임 월드 초기화: 배경 레이어와 플레이어 추가
     override val world = World(Layer.entries.toTypedArray()).apply {
@@ -54,7 +65,9 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
         val elapsedSeconds = gctx.frameTime
         scoreManager.update(elapsedSeconds)
 
-        noteManager.update(elapsedSeconds) {
+        val currentMusicPos = mediaPlayer?.currentPosition?.toLong() ?: 0L
+
+        noteManager.update(currentMusicPos) {
             scoreManager.onMiss()
             player.hp -= 10
         }
