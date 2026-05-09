@@ -23,63 +23,13 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
     // 노트 생성 주기 관리 타이머
     private var spawnTimer = 0f
 
-    // 로직 관련 Manager 인스턴스
+    // 로직 관련 Manager 및 UI 클래스 인스턴스
     private val soundManager = SoundManager(gctx.view.context)
     private val scoreManager = ScoreManager()
+    private val hud = Hud()
 
-    // --- UI 및 게임 요소 그리기용 Paint 설정 ---
-    // 스코어
-    private val scorePaint = android.graphics.Paint().apply {
-        color = android.graphics.Color.WHITE
-        textSize = 60f
-        isFakeBoldText = true
-        textAlign = android.graphics.Paint.Align.LEFT
-    }
-
-    // 체력
-    private val hpPaint = android.graphics.Paint().apply {
-        color = android.graphics.Color.RED
-        textSize = 60f
-        isFakeBoldText = true
-        textAlign = android.graphics.Paint.Align.CENTER
-    }
-
-    // 상단 레인 타격 타이밍 마커
-    private val upperMarkerPaint = android.graphics.Paint().apply {
-        color = android.graphics.Color.CYAN
-        style = android.graphics.Paint.Style.STROKE
-        strokeWidth = 8f
-        alpha = 180
-    }
-
-    // 하단 레인 타격 타이밍 마커
-    private val lowerMarkerPaint = android.graphics.Paint().apply {
-        color = android.graphics.Color.MAGENTA
-        style = android.graphics.Paint.Style.STROKE
-        strokeWidth = 8f
-        alpha = 180
-    }
-
-    // 판정 메시지
-    private val judgmentPaint = android.graphics.Paint().apply {
-        color = android.graphics.Color.YELLOW
-        textSize = 100f
-        isFakeBoldText = true
-        textAlign = android.graphics.Paint.Align.CENTER
-    }
-
-    // 콤보
-    private val comboPaint = android.graphics.Paint().apply {
-        color = android.graphics.Color.YELLOW
-        textSize = 80f
-        isFakeBoldText = true
-        textAlign = android.graphics.Paint.Align.CENTER
-    }
-
-    // 판정 기준이 되는 X좌표와 각 레인의 Y좌표 상수
+    // 판정 기준이 되는 상수
     private val TARGET_X = 400f
-    private val UPPER_LANE_Y = 300f
-    private val LOWER_LANE_Y = 500f
 
     // 게임 월드 초기화: 배경 레이어와 플레이어 추가
     override val world = World(Layer.entries.toTypedArray()).apply {
@@ -95,24 +45,7 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
 
     override fun draw(canvas: android.graphics.Canvas) {
         super.draw(canvas)
-
-        // 점수 및 HP 표시
-        canvas.drawText("Score: ${scoreManager.score}", 50f, 80f, scorePaint)
-        canvas.drawText("HP: ${player.hp}", 800f, 850f, hpPaint)
-
-        // 타격 지점을 시각적으로 보여주는 가이드 원 표시
-        canvas.drawCircle(TARGET_X, UPPER_LANE_Y, 40f, upperMarkerPaint)
-        canvas.drawCircle(TARGET_X, LOWER_LANE_Y, 40f, lowerMarkerPaint)
-
-        // 콤보가 있을 대만 화면에 표시
-        if (scoreManager.combo > 0) {
-            canvas.drawText("${scoreManager.combo} COMBO", 800f, 550f, comboPaint)
-        }
-
-        // 최신 판정 결과를 잠시 동안 화면에 표시
-        if (scoreManager.lastJudgment.isNotEmpty()) {
-            canvas.drawText(scoreManager.lastJudgment, 800f, 450f, judgmentPaint)
-        }
+        hud.draw(canvas, scoreManager, player)
     }
 
     override fun update(gctx: GameContext) {
