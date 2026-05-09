@@ -10,6 +10,7 @@ import kr.ac.tukorea.jmw.vibecosmos.R
 class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCollidable {
     // 해당 노트가 생성된 레인
     var lane: Player.State = Player.State.RUN
+    private var speed: Float = 600f
 
     // 충돌 감지를 위해 현재 그려지는 영역 반환
     override val collisionRect: RectF get() = dstRect
@@ -25,8 +26,9 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
     }
 
     // 노트 재사용 시 상태 초기화하는 함수
-    fun reset(lane: Player.State) {
+    fun reset(lane: Player.State, speed: Float) {
         this.lane = lane
+        this.speed = speed
         // 레인 종류에 따라 Y축 위치 겨ㅕㅕㄹ정
         val targetY = if (lane == Player.State.UP_ATK) 300f else 500f
 
@@ -39,7 +41,7 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
     override fun update(gctx: GameContext) {
         val elapsedSeconds = gctx.frameTime
         // 초당 600픽셀
-        x -= 600 * elapsedSeconds
+        x -= speed * elapsedSeconds
         syncDstRect()
     }
 }

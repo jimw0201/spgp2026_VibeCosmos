@@ -26,7 +26,9 @@ class MainActivity : AppCompatActivity() {
 
     fun onBtnStartGame(view: View) {
         mediaPlayer?.stop()
-        startGameActivity()
+
+        val intent = Intent(this, SongSelectActivity::class.java)
+        startActivity(intent)
     }
 
     private fun startGameActivity() {

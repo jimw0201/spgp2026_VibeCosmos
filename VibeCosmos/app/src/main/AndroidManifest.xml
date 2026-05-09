@@ -12,6 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.VibeCosmos">
         <activity
+            android:name=".app.SongSelectActivity"
+            android:exported="false" />
+        <activity
             android:name=".app.VibeCosmosActivity"
             android:exported="false" />
         <activity

@@ -6,11 +6,12 @@ import kr.ac.tukorea.jmw.a2dg.view.GameContext
 import kr.ac.tukorea.jmw.a2dg.objects.HorzScrollBackground
 import kr.ac.tukorea.jmw.a2dg.scene.World
 import kr.ac.tukorea.jmw.vibecosmos.R
+import kr.ac.tukorea.jmw.vibecosmos.game.data.SongConfig
 import kr.ac.tukorea.jmw.vibecosmos.game.manager.NoteManager
 import kr.ac.tukorea.jmw.vibecosmos.game.manager.ScoreManager
 import kr.ac.tukorea.jmw.vibecosmos.game.manager.SoundManager
 
-class MainScene(gctx: GameContext) : Scene(gctx) {
+class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
     // 그리기 순서를 결정하는 레이어 정의
     enum class Layer {
         BG, PLAYER, NOTES, UI
@@ -39,7 +40,7 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
             add(HorzScrollBackground(gctx, resId, speed), Layer.BG)
         }
         add(player, Layer.PLAYER)
-        noteManager = NoteManager(gctx, this)
+        noteManager = NoteManager(gctx, this, config)
     }
 
     override fun draw(canvas: android.graphics.Canvas) {

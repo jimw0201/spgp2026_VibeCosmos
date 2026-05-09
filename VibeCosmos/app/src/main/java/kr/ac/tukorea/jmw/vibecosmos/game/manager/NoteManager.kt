@@ -2,13 +2,15 @@ package kr.ac.tukorea.jmw.vibecosmos.game.manager
 
 import kr.ac.tukorea.jmw.a2dg.scene.World
 import kr.ac.tukorea.jmw.a2dg.view.GameContext
+import kr.ac.tukorea.jmw.vibecosmos.game.data.SongConfig
 import kr.ac.tukorea.jmw.vibecosmos.game.main.MainScene
 import kr.ac.tukorea.jmw.vibecosmos.game.main.Note
 import kr.ac.tukorea.jmw.vibecosmos.game.main.Player
 
 class NoteManager(
     private val gctx: GameContext,
-    private val world: World<MainScene.Layer>
+    private val world: World<MainScene.Layer>,
+    private val config: SongConfig
 ) {
     private var spawnTimer = 0f
 
@@ -46,7 +48,7 @@ class NoteManager(
         val note = world.obtain(Note::class.java) ?: Note(gctx)
 
         // 노트 상태 초기화 및 월드 추가
-        note.reset(randomLane)
+        note.reset(randomLane, config.noteSpeed)
         world.add(note, MainScene.Layer.NOTES)
     }
 }
