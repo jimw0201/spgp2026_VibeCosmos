@@ -33,11 +33,14 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
     // 판정 기준이 되는 상수
     private val TARGET_X = 400f
 
+    private var sceneStartTime = System.currentTimeMillis()
+    private val START_DELAY = 2000L
+    private var isMusicStarted = false
+
     init {
         // config에 저장된 musicResId를 가져와서 재생 시작
         mediaPlayer = MediaPlayer.create(gctx.view.context, config.musicResId).apply {
             isLooping = false
-            start()
         }
     }
 
@@ -65,7 +68,23 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
         val elapsedSeconds = gctx.frameTime
         scoreManager.update(elapsedSeconds)
 
-        val currentMusicPos = mediaPlayer?.currentPosition?.toLong() ?: 0L
+        // 현재 절대 시간에서 시작 시간과 지연 시간을 빼서 '상대 게임 시간' 계산
+        val now = System.currentTimeMillis()
+        val relativeTime = (now - sceneStartTime) - START_DELAY
+
+        // 지연 시간이 끝나고 0ms가 되는 순간 음악 시작
+        if (!isMusicStarted && relativeTime >= 0) {
+            mediaPlayer?.start()
+            isMusicStarted = true
+        }
+
+        // NoteManager에 전달할 현재 시간 결정
+        // 음악이 시작된 후에는 실제 미디어 플레이어의 위치를 사용하여 싱크를 맞춤
+        val currentMusicPos = if (isMusicStarted) {
+            mediaPlayer?.currentPosition?.toLong() ?: relativeTime
+        } else {
+            relativeTime
+        }
 
         noteManager.update(currentMusicPos) {
             scoreManager.onMiss()

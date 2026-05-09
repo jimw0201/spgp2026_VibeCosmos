@@ -47,7 +47,7 @@ class NoteManager(
         currentTimeMs = musicTimeMs
 
         val travelTime = (1300f / config.noteSpeed * 1000).toLong()
-        
+
         while (noteQueue.isNotEmpty() && (noteQueue.peek()!!.timeMs - travelTime) <= currentTimeMs) {
             val info = noteQueue.poll()!!
             spawnNote(info.lane)
