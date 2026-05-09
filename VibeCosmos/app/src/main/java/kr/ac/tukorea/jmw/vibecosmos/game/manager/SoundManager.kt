@@ -11,6 +11,7 @@ class SoundManager(context: Context) {
     private var hitSoundId: Int = 0
     private var swingUpSoundId: Int = 0
     private var swingDownSoundId: Int = 0
+    private var damageSoundId: Int = 0
 
     init {
         // 오디오 속성 설정
@@ -29,6 +30,7 @@ class SoundManager(context: Context) {
         hitSoundId = soundPool.load(context, R.raw.hitsound_000, 1)
         swingUpSoundId = soundPool.load(context, R.raw.swing_up, 1)
         swingDownSoundId = soundPool.load(context, R.raw.swing_down, 1)
+        damageSoundId = soundPool.load(context, R.raw.damage, 1)
     }
 
     // 재생 함수들
@@ -36,6 +38,12 @@ class SoundManager(context: Context) {
     fun playHit() {
         if (hitSoundId != 0) {
             soundPool.play(hitSoundId, 1.0f, 1.0f, 1, 0, 1.0f)
+        }
+    }
+
+    fun playDamage() {
+        if (damageSoundId != 0) {
+            soundPool.play(damageSoundId, 1.0f, 1.0f, 1, 0, 1.0f)
         }
     }
 

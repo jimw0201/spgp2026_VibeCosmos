@@ -117,7 +117,7 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
 
             // 플레이어의 히트박스와 노트의 히트박스가 겹치는지 확인
             if (android.graphics.RectF.intersects(player.collisionRect, note.collisionRect)) {
-                // 충돌 시 로직 실행
+                soundManager.playDamage()
                 player.hp -= 10
 
                 scoreManager.resetCombo()
