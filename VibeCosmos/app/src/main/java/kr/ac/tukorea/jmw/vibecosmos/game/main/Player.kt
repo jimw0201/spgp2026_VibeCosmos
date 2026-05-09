@@ -40,8 +40,8 @@ class Player(gctx: GameContext): AnimSprite(
     // 플레이어의 현재 상태를 관리하는 프로퍼티
     var state = State.RUN
         set(value) {
-            // 이미 변경하려는 상태와 동일하다면 무시
-            if (field == value) return
+            if (field == value && value == State.RUN) return
+
             field = value
 
             // 상태에 따라 변경될 설정값 배열 (이미지 ID, 총 프레임 수, 크기 배율, FPS, 이동할 Y좌표)
