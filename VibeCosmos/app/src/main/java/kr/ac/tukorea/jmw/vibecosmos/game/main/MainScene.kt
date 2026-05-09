@@ -39,7 +39,7 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
 
     // 판정 기준이 되는 상수
     private val TARGET_X = 400f
-    
+
     init {
         readyMediaPlayer = MediaPlayer.create(gctx.view.context, R.raw.readygo)
 
@@ -102,7 +102,28 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
 
         noteManager.update(currentMusicPos) {
             scoreManager.onMiss()
-            player.hp -= 10
+        }
+
+        checkPlayerCollision()
+    }
+
+    private fun checkPlayerCollision() {
+        // .toMutableList()를 사용하여 현재 시점의 리스트 복사본을 만들기
+        val notes = world.objectsAt(Layer.NOTES).toMutableList()
+        val it = notes.iterator()
+
+        while (it.hasNext()) {
+            val note = it.next() as? Note ?: continue
+
+            // 플레이어의 히트박스와 노트의 히트박스가 겹치는지 확인
+            if (android.graphics.RectF.intersects(player.collisionRect, note.collisionRect)) {
+                // 충돌 시 로직 실행
+                scoreManager.onMiss()
+                player.hp -= 10
+
+                // 원본 world에서 노트를 삭제
+                world.remove(note, Layer.NOTES)
+            }
         }
     }
 
