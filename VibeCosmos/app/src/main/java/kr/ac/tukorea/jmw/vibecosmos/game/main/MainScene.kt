@@ -118,8 +118,9 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
             // 플레이어의 히트박스와 노트의 히트박스가 겹치는지 확인
             if (android.graphics.RectF.intersects(player.collisionRect, note.collisionRect)) {
                 // 충돌 시 로직 실행
-                scoreManager.onMiss()
                 player.hp -= 10
+
+                scoreManager.resetCombo()
 
                 // 원본 world에서 노트를 삭제
                 world.remove(note, Layer.NOTES)
@@ -127,32 +128,32 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
         }
     }
 
-    // 플레이어의 공격 상태와 노트의 거리를 계산하여 판정 수행
     private fun checkHit(attackState: Player.State) {
         val notes = world.objectsAt(Layer.NOTES)
         var closestNote: Note? = null
         var minDistance = Float.MAX_VALUE
 
-        // 현재 공격한 레인에 있는 가장 가까운 노트를 찾음
+        val MAX_HIT_DISTANCE = 100f
+
         for (obj in notes) {
             val note = obj as? Note ?: continue
             if (note.lane != attackState) continue
             val distance = Math.abs(note.x - TARGET_X)
-            if (distance < 200f && distance < minDistance) {
+
+            // 탐색 범위를 좁혀서, 판정 범위 밖의 노트는 아예 건드리지 않게 함
+            if (distance < MAX_HIT_DISTANCE && distance < minDistance) {
                 minDistance = distance
                 closestNote = note
             }
         }
 
-        // 유효 거리 내에 노트가 있다면 점수 계산
         if (closestNote != null) {
-            // 판정 및 점수 추가 위임
             val isHit = scoreManager.addScore(minDistance)
 
             if (isHit) {
                 soundManager.playHit()
+                world.remove(closestNote, Layer.NOTES)
             }
-            world.remove(closestNote, Layer.NOTES)
         }
     }
 

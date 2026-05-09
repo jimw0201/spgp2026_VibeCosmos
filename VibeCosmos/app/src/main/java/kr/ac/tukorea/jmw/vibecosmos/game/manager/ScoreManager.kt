@@ -56,4 +56,8 @@ class ScoreManager {
         judgmentDisplayTime = 0f
         combo = 0
     }
+
+    fun resetCombo() {
+        combo = 0
+    }
 }
