@@ -9,14 +9,16 @@ class ScoreManager {
     var lastJudgment: String = ""
         private set
 
-    private var judgmentTimer: Int = 0
     private var judgmentDisplayTime = 0f
+
+    val JUDGMENT_DURATION = 0.5f
 
     // 판정 메시지 노출 시간 업데이트
     fun update(elapsedSeconds: Float) {
         if (lastJudgment.isNotEmpty()) {
             judgmentDisplayTime += elapsedSeconds
-            if (judgmentDisplayTime > 0.8f) {
+
+            if (judgmentDisplayTime >= JUDGMENT_DURATION) {
                 lastJudgment = ""
                 judgmentDisplayTime = 0f
             }
@@ -28,7 +30,7 @@ class ScoreManager {
         judgmentDisplayTime = 0f
 
         val baseScore = when {
-            minDistance < 40f -> {
+            minDistance < 50f -> {
                 lastJudgment = "PERFECT"
                 combo++
                 100

@@ -70,6 +70,10 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
     override fun update(gctx: GameContext) {
         super.update(gctx)
 
+        val elapsedSeconds = gctx.frameTime
+
+        scoreManager.update(elapsedSeconds)
+
         val now = System.currentTimeMillis()
 
         // 씬 진입 후 첫 업데이트 시 Ready 사운드 재생 시작
