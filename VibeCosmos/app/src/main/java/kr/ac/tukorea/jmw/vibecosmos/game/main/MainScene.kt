@@ -26,18 +26,23 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
     private val soundManager = SoundManager(gctx.view.context)
     private val scoreManager = ScoreManager()
     private lateinit var noteManager: NoteManager
-
-    private var mediaPlayer: MediaPlayer? = null
     private val hud = Hud()
+
+    // 사운드 플레이어 관련
+    private var mediaPlayer: MediaPlayer? = null
+    private var readyMediaPlayer: MediaPlayer? = null
+    private var isMusicStarted = false
+    private var isReadyStarted = false
+
+    private val READY_DURATION = 5000L
+    private var sceneStartTime = 0L
 
     // 판정 기준이 되는 상수
     private val TARGET_X = 400f
-
-    private var sceneStartTime = System.currentTimeMillis()
-    private val START_DELAY = 2000L
-    private var isMusicStarted = false
-
+    
     init {
+        readyMediaPlayer = MediaPlayer.create(gctx.view.context, R.raw.readygo)
+
         // config에 저장된 musicResId를 가져와서 재생 시작
         mediaPlayer = MediaPlayer.create(gctx.view.context, config.musicResId).apply {
             isLooping = false
@@ -65,21 +70,30 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
     override fun update(gctx: GameContext) {
         super.update(gctx)
 
-        val elapsedSeconds = gctx.frameTime
-        scoreManager.update(elapsedSeconds)
-
-        // 현재 절대 시간에서 시작 시간과 지연 시간을 빼서 '상대 게임 시간' 계산
         val now = System.currentTimeMillis()
-        val relativeTime = (now - sceneStartTime) - START_DELAY
 
-        // 지연 시간이 끝나고 0ms가 되는 순간 음악 시작
+        // 씬 진입 후 첫 업데이트 시 Ready 사운드 재생 시작
+        if (!isReadyStarted) {
+            readyMediaPlayer?.start()
+            sceneStartTime = now
+            isReadyStarted = true
+        }
+
+        // 상대 시간 계산
+        val relativeTime = (now - sceneStartTime) - READY_DURATION
+
+        // READY_DURATION이 지나서 relativeTime이 0이 되면 메인 음악 시작
         if (!isMusicStarted && relativeTime >= 0) {
             mediaPlayer?.start()
             isMusicStarted = true
+
+            // 사용이 끝난 Ready 사운드 리소스 해제
+            readyMediaPlayer?.release()
+            readyMediaPlayer = null
         }
 
-        // NoteManager에 전달할 현재 시간 결정
-        // 음악이 시작된 후에는 실제 미디어 플레이어의 위치를 사용하여 싱크를 맞춤
+        // NoteManager 업데이트
+        // 음악 시작 전엔 relativeTime(음수)을, 시작 후엔 실제 음악 포지션을 전달
         val currentMusicPos = if (isMusicStarted) {
             mediaPlayer?.currentPosition?.toLong() ?: relativeTime
         } else {
