@@ -8,6 +8,7 @@ import kr.ac.tukorea.jmw.a2dg.view.GameContext
 import kr.ac.tukorea.jmw.a2dg.objects.HorzScrollBackground
 import kr.ac.tukorea.jmw.a2dg.scene.World
 import kr.ac.tukorea.jmw.vibecosmos.R
+import kr.ac.tukorea.jmw.vibecosmos.game.manager.SoundManager
 
 class MainScene(gctx: GameContext) : Scene(gctx) {
     // 그리기 순서를 결정하는 레이어 정의
@@ -30,27 +31,7 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
     // 현재 연속 콤보 수
     var combo = 0
 
-    // SoundPool 및 사운드 ID 변수 선언
-    private val soundPool: SoundPool
-    private var hitSoundId: Int = 0
-    private var swingUpSoundId: Int = 0
-    private var swingDownSoundId: Int = 0
-
-    init {
-        val audioAttributes = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_GAME)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-            .build()
-
-        soundPool = SoundPool.Builder()
-            .setMaxStreams(10)
-            .setAudioAttributes(audioAttributes)
-            .build()
-
-        hitSoundId = soundPool.load(gctx.view.context, R.raw.hitsound_000, 1)
-        swingUpSoundId = soundPool.load(gctx.view.context, R.raw.swing_up, 1)
-        swingDownSoundId = soundPool.load(gctx.view.context, R.raw.swing_down, 1)
-    }
+    private val soundManager = SoundManager(gctx.view.context)
 
     // --- UI 및 게임 요소 그리기용 Paint 설정 ---
     // 스코어
@@ -205,13 +186,13 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
                 minDistance < 40f -> {
                     lastJudgment = "PERFECT"
                     combo++
-                    playHitSound()
+                    soundManager.playHit()
                     100
                 }
                 minDistance < 100f -> {
                     lastJudgment = "GREAT"
                     combo++
-                    playHitSound()
+                    soundManager.playHit()
                     50
                 }
                 else -> {
@@ -226,22 +207,6 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
             score += (baseScore * multiplier).toInt()
 
             world.remove(closestNote, Layer.NOTES)
-        }
-    }
-
-    // 공격 사운드 재생 함수
-    private fun playHitSound() {
-        if (hitSoundId != 0) {
-            // 사운드ID, 왼쪽 볼륨, 오른쪽 볼륨, 우선순위, 반복여부, 재생속도
-            soundPool.play(hitSoundId, 1.0f, 1.0f, 1, 0, 1.0f)
-        }
-    }
-
-    // 스윙 사운드 재생 함수
-    private fun playSwingSound(soundId: Int) {
-        if (soundId != 0) {
-            // 볼륨과 재생 속도는 취향껏 조절 가능합니다.
-            soundPool.play(soundId, 0.8f, 0.8f, 1, 0, 1.0f)
         }
     }
 
@@ -262,11 +227,11 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         val screenCenter = gctx.view.width / 2
 
         val attackState = if (event.x > screenCenter) {
-            playSwingSound(swingDownSoundId)
+            soundManager.playSwingDown()
             player.attackDown()
             Player.State.DOWN_ATK
         } else {
-            playSwingSound(swingUpSoundId)
+            soundManager.playSwingUp()
             player.attackUp()
             Player.State.UP_ATK
         }
