@@ -7,7 +7,8 @@ TUKorea SPGP 2026 Term Project: 2D Rhythm Action Game 'Vibe Cosmos'
 * **1차 발표 영상**: https://youtu.be/nNY9WgxcCcE
 * **2차 발표 영상**: https://youtu.be/NpUlJM_BEF4
 * **GitHub Repository**: https://github.com/jimw0201/spgp2026_VibeCosmos.git
-* **README.md**: https://github.com/jimw0201/spgp2026_VibeCosmos/blob/main/README.md
+* **1차 README.md**: https://github.com/jimw0201/spgp2026_VibeCosmos/blob/72710f902ea37a88a5de6680b2fff0c007d631f8/README.md
+* **2차 README.md**: https://github.com/jimw0201/spgp2026_VibeCosmos/blob/c9bb669d6314cd609d36a390b097c1bbca10f68f/README.md
 
 ---
 
