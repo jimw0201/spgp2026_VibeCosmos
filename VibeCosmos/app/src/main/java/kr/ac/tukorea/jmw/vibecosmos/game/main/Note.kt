@@ -1,5 +1,7 @@
 package kr.ac.tukorea.jmw.vibecosmos.game.main
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.RectF
 import kr.ac.tukorea.jmw.a2dg.objects.IBoxCollidable
 import kr.ac.tukorea.jmw.a2dg.objects.IRecyclable
@@ -14,6 +16,10 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
     var lengthMs: Long = 0L
     val isLongNote: Boolean get() = lengthMs > 0L
 
+    private var headBitmap: Bitmap? = null
+    private var lineBitmap: Bitmap? = null
+    private var tailBitmap: Bitmap? = null
+
     // 베지에 제어점 초기화
     private var p0X = 1600f
     private var p0Y = 0f
@@ -25,47 +31,70 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
     private var progress = 0f
     private var interpolationSpeed = 0.5f
 
+    private val componentRect = RectF()
     private val fixedCollisionRect = RectF()
+
+    init {
+        headBitmap = gctx.res.getBitmap(R.mipmap.note_hold_head)
+        lineBitmap = gctx.res.getBitmap(R.mipmap.note_hold_line)
+        tailBitmap = gctx.res.getBitmap(R.mipmap.note_hold_tail)
+    }
 
     override val collisionRect: RectF
         get() {
-            fixedCollisionRect.set(
-                x - width / 2f,
-                y - height / 2f,
-                x + width / 2f,
-                y + height / 2f
-            )
+            if (isLongNote) {
+                val totalWidth = speed * (lengthMs / 1000f)
+                fixedCollisionRect.set(
+                    x - width / 2f,
+                    y - height / 2f,
+                    x + width / 2f + totalWidth,
+                    y + height / 2f
+                )
+            } else {
+                fixedCollisionRect.set(
+                    x - width / 2f,
+                    y - height / 2f,
+                    x + width / 2f,
+                    y + height / 2f
+                )
+            }
             return fixedCollisionRect
         }
 
     fun reset(lane: Player.State, speed: Float, lengthMs: Long = 0L) {
         this.lane = lane
         this.speed = speed
-        this.progress = 0f
         this.lengthMs = lengthMs
 
         val targetLaneY = if (lane == Player.State.UP_ATK) 300f else 500f
 
-        p0X = 1600f; p1X = 1400f; p2X = 1200f
-        p2Y = targetLaneY; p1Y = targetLaneY
+        if (isLongNote) {
+            this.progress = 1f
+            p2Y = targetLaneY
 
-        if (lane == Player.State.UP_ATK) {
-            p0Y = -50f
+            setCenter(1600f, targetLaneY)
         } else {
-            p0Y = 950f
+            this.progress = 0f
+            p0X = 1600f; p1X = 1400f; p2X = 1200f
+            p2Y = targetLaneY; p1Y = targetLaneY
+
+            if (lane == Player.State.UP_ATK) {
+                p0Y = -50f
+            } else {
+                p0Y = 950f
+            }
+
+            interpolationSpeed = speed / (p0X - p2X)
+            setCenter(p0X, p0Y)
         }
 
-        interpolationSpeed = speed / (p0X - p2X)
-
+        val desiredWidth = 140f
         val bitmapWidth = bitmap?.width ?: 100
         val bitmapHeight = bitmap?.height ?: 100
-
-        val desiredWidth = 140f
         val aspectRatio = bitmapHeight.toFloat() / bitmapWidth.toFloat()
         val desiredHeight = desiredWidth * aspectRatio
 
         setSize(desiredWidth, desiredHeight)
-        setCenter(p0X, p0Y)
     }
 
     override fun update(gctx: GameContext) {
@@ -86,6 +115,57 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
         }
 
         syncDstRect()
+    }
+
+    override fun draw(canvas: Canvas) {
+        if (!isLongNote) {
+            // 일반 노트는 기존 프레임워크(Sprite) 기능대로 그림
+            super.draw(canvas)
+            return
+        }
+
+        // --- 롱노트 전용 3단 조립 렌더링 ---
+        val currentHeadX = x
+        val currentY = y
+        val halfW = width / 2f
+        val halfH = height / 2f
+
+        // 1. 현재 노트 속도와 남은 시간(ms)을 기준으로 롱노트 몸통의 가로 픽셀 길이를 계산
+        val noteLengthPx = speed * (lengthMs / 1000f)
+
+        // 2. [몸통 줄 (Line)] 그리기 (머리 중심부터 꼬리 중심까지 늘려서 채움)
+        lineBitmap?.let {
+            componentRect.set(
+                currentHeadX,
+                currentY - halfH,
+                currentHeadX + noteLengthPx,
+                currentY + halfH
+            )
+            canvas.drawBitmap(it, null, componentRect, null)
+        }
+
+        // 3. [꼬리 (Tail)] 그리기 (몸통 줄이 끝나는 지점에 배치)
+        tailBitmap?.let {
+            val tailLeft = currentHeadX + noteLengthPx - halfW
+            componentRect.set(
+                tailLeft,
+                currentY - halfH,
+                tailLeft + width,
+                currentY + halfH
+            )
+            canvas.drawBitmap(it, null, componentRect, null)
+        }
+
+        // 4. [머리 (Head)] 그리기 (가장 위에 덮어씌움)
+        headBitmap?.let {
+            componentRect.set(
+                currentHeadX - halfW,
+                currentY - halfH,
+                currentHeadX + halfW,
+                currentY + halfH
+            )
+            canvas.drawBitmap(it, null, componentRect, null)
+        }
     }
 
     override fun onRecycle() {

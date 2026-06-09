@@ -27,7 +27,7 @@ class NoteManager(
             gctx.view.context.assets.open(config.chartFileName).bufferedReader().useLines { lines ->
                 lines.forEach { line ->
                     val parts = line.split("|")
-                    
+
                     if (parts.size >= 2) {
                         val time = parts[0].trim().toLong()
                         val laneIdx = parts[1].trim().toInt()
