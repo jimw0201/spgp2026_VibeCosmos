@@ -8,40 +8,88 @@ import kr.ac.tukorea.jmw.a2dg.view.GameContext
 import kr.ac.tukorea.jmw.vibecosmos.R
 
 class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCollidable {
-    // 해당 노트가 생성된 레인
-    var lane: Player.State = Player.State.RUN
-    private var speed: Float = 600f
+    lateinit var lane: Player.State
+    private var speed: Float = 0f
 
-    // 충돌 감지를 위해 현재 그려지는 영역 반환
-    override val collisionRect: RectF get() = dstRect
+    // 베지에 제어점 초기화
+    private var p0X = 1600f
+    private var p0Y = 0f
+    private var p1X = 1400f
+    private var p1Y = 0f
+    private var p2X = 1200f
+    private var p2Y = 0f
 
-    override fun onRecycle() {
-        // 객체 풀에 반환될 때 필요한 초기화 로직
-    }
+    private var progress = 0f
+    private var interpolationSpeed = 0.5f
 
-    // 적 노트 기본 크기 100x100으로 초기화
-    init {
-        width = 100f
-        height = 100f
-    }
+    private val fixedCollisionRect = RectF()
 
-    // 노트 재사용 시 상태 초기화하는 함수
+    override val collisionRect: RectF
+        get() {
+            fixedCollisionRect.set(
+                x - width / 2f,
+                y - height / 2f,
+                x + width / 2f,
+                y + height / 2f
+            )
+            return fixedCollisionRect
+        }
+
     fun reset(lane: Player.State, speed: Float) {
         this.lane = lane
         this.speed = speed
-        // 레인 종류에 따라 Y축 위치 결정
-        val targetY = if (lane == Player.State.UP_ATK) 300f else 500f
+        this.progress = 0f
 
-        // 화면 오른쪽 끝에서 시작하도록 설정
-        setCenter(1700f, targetY)
+        val targetLaneY = if (lane == Player.State.UP_ATK) 300f else 500f
+
+        p0X = 1600f
+        p1X = 1400f
+        p2X = 1200f
+
+        p2Y = targetLaneY
+        p1Y = targetLaneY
+
+        if (lane == Player.State.UP_ATK) {
+            p0Y = -50f
+        } else {
+            p0Y = 950f
+        }
+
+        interpolationSpeed = speed / (p0X - p2X)
+
+        val bitmapWidth = bitmap?.width ?: 100
+        val bitmapHeight = bitmap?.height ?: 100
+
+        val desiredWidth = 140f
+        val aspectRatio = bitmapHeight.toFloat() / bitmapWidth.toFloat()
+        val desiredHeight = desiredWidth * aspectRatio
+
+        setSize(desiredWidth, desiredHeight)
+
+        setCenter(p0X, p0Y)
+    }
+
+    override fun update(gctx: GameContext) {
+        if (progress < 1f) {
+            progress += gctx.frameTime * interpolationSpeed
+            if (progress > 1f) progress = 1f
+
+            val t = progress
+            val oneMinusT = 1f - t
+
+            val bezierX = (oneMinusT * oneMinusT * p0X) + (2f * oneMinusT * t * p1X) + (t * t * p2X)
+            val bezierY = (oneMinusT * oneMinusT * p0Y) + (2f * oneMinusT * t * p1Y) + (t * t * p2Y)
+
+            setCenter(bezierX, bezierY)
+        } else {
+            x -= speed * gctx.frameTime
+            y = p2Y
+        }
+
         syncDstRect()
     }
 
-    // 매 프레임마다 노트를 왼쪽으로 이동
-    override fun update(gctx: GameContext) {
-        val elapsedSeconds = gctx.frameTime
-        // 초당 600픽셀
-        x -= speed * elapsedSeconds
-        syncDstRect()
+    override fun onRecycle() {
+        progress = 0f
     }
 }

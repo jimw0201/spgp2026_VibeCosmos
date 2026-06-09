@@ -13,18 +13,15 @@ class NoteManager(
     private val world: World<MainScene.Layer>,
     private val config: SongConfig
 ) {
-    // 채보 데이터를 담을 클래스와 큐 생성
     data class NoteInfo(val timeMs: Long, val lane: Player.State)
     private val noteQueue: Queue<NoteInfo> = LinkedList()
 
-    // 게임 시작 후 경과 시간
     private var currentTimeMs: Long = 0
 
     init {
         loadChart()
     }
 
-    // assets 폴더에서 txt 파일을 읽어 큐에 저장
     private fun loadChart() {
         try {
             gctx.view.context.assets.open(config.chartFileName).bufferedReader().useLines { lines ->
@@ -58,7 +55,7 @@ class NoteManager(
         var i = 0
         while (i < notes.size) {
             val note = notes[i] as? Note
-            if (note != null && note.x < -100f) {
+            if (note != null && note.x < 100f) {
                 onMiss()
                 world.remove(note, MainScene.Layer.NOTES)
             } else {

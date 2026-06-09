@@ -31,6 +31,6 @@ class SongSelectActivity : AppCompatActivity() {
             putExtra("SELECTED_SONG", config)
         }
         startActivity(intent)
-        
+
     }
 }
