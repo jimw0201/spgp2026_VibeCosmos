@@ -1,0 +1,16 @@
+[
+  {
+    "title": "Test 1",
+    "musicFileName": "music1",
+    "bgFileName": "stage_bg1",
+    "chartFileName": "chart1.txt",
+    "noteSpeed": 600.0
+  },
+  {
+    "title": "Test 2",
+    "musicFileName": "title",
+    "bgFileName": "stage_bg2",
+    "chartFileName": "chart2.txt",
+    "noteSpeed": 900.0
+  }
+]

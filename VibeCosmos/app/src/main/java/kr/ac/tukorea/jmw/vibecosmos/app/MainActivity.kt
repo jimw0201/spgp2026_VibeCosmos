@@ -7,51 +7,55 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import kr.ac.tukorea.jmw.vibecosmos.R
 import kr.ac.tukorea.jmw.vibecosmos.databinding.ActivityMainBinding
+import kr.ac.tukorea.jmw.vibecosmos.game.manager.SongCatalog
 
 class MainActivity : AppCompatActivity() {
     private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
-
-    // BGM 제어 변수
     private var mediaPlayer: MediaPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
-        mediaPlayer = MediaPlayer.create(this, R.raw.title).apply {
-            isLooping = true
-            start()
-        }
+        SongCatalog.load(this.assets)
     }
 
     fun onBtnStartGame(view: View) {
-        mediaPlayer?.stop()
+        stopAndReleaseMediaPlayer()
 
         val intent = Intent(this, SongSelectActivity::class.java)
         startActivity(intent)
     }
 
-    private fun startGameActivity() {
-        val intent = Intent(this, VibeCosmosActivity::class.java)
-        startActivity(intent)
+    private fun stopAndReleaseMediaPlayer() {
+        mediaPlayer?.let {
+            if (it.isPlaying) {
+                it.stop()
+            }
+            it.release()
+        }
+        mediaPlayer = null
     }
 
-    // 액티비티가 화면에서 사라질 때
+    override fun onResume() {
+        super.onResume()
+        if (mediaPlayer == null) {
+            mediaPlayer = MediaPlayer.create(this, R.raw.title).apply {
+                isLooping = true
+                start()
+            }
+        } else if (!mediaPlayer!!.isPlaying) {
+            mediaPlayer!!.start()
+        }
+    }
+
     override fun onPause() {
         super.onPause()
         mediaPlayer?.pause()
     }
 
-    // 다시 앱으로 돌아왔을 때
-    override fun onResume() {
-        super.onResume()
-        mediaPlayer?.start()
-    }
-
-    // 액티비티가 완전히 종료될 때
     override fun onDestroy() {
         super.onDestroy()
-        mediaPlayer?.release()
-        mediaPlayer = null
+        stopAndReleaseMediaPlayer()
     }
 }

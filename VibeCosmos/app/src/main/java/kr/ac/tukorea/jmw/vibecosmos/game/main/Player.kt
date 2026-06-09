@@ -48,6 +48,14 @@ class Player(gctx: GameContext): AnimSprite(
         setCenter(200f, 500f)
     }
 
+    private data class StateConfig(
+        val resId: Int,
+        val frameCount: Int,
+        val scale: Float,
+        val fps: Float,
+        val targetY: Float
+    )
+
     // 플레이어의 현재 상태를 관리하는 프로퍼티
     var state = State.RUN
         set(value) {
@@ -56,21 +64,21 @@ class Player(gctx: GameContext): AnimSprite(
             field = value
 
             // 상태에 따라 변경될 설정값 배열 (이미지 ID, 총 프레임 수, 크기 배율, FPS, 이동할 Y좌표)
-            val (resId, frameCount, scale, targetFps, targetY) = when (value) {
-                State.RUN -> arrayOf(R.mipmap.player_run, 32, 1.0f, 60f, 500f)
-                State.UP_ATK -> arrayOf(R.mipmap.player_up_atk, 30, 1.3f, 90f, 300f)
-                State.DOWN_ATK -> arrayOf(R.mipmap.player_down_atk, 22, 1.3f, 90f, 500f)
+            val config = when (value) {
+                State.RUN -> StateConfig(R.mipmap.player_run, 32, 1.0f, 60f, 500f)
+                State.UP_ATK -> StateConfig(R.mipmap.player_up_atk, 30, 1.3f, 90f, 300f)
+                State.DOWN_ATK -> StateConfig(R.mipmap.player_down_atk, 22, 1.3f, 90f, 500f)
             }
 
             // 상태에 맞는 스프라이트 이미지 및 애니메이션 정보 교체
-            bitmap = gctx.res.getBitmap(resId as Int)
-            this.frameCount = frameCount as Int
-            this.fps = targetFps as Float
+            bitmap = gctx.res.getBitmap(config.resId)
+            this.frameCount = config.frameCount
+            this.fps = config.fps
 
             // 공격 상태일 때 지정된 배율만큼 크기 키우고, 타겟 레인으로 위치 이동
-            this.width = WIDTH * (scale as Float)
-            this.height = HEIGHT * scale
-            setCenter(200f, targetY as Float)
+            this.width = WIDTH * config.scale
+            this.height = HEIGHT * config.scale
+            setCenter(200f, config.targetY)
 
             // 상태 변경 시간을 갱신하여 애니메이션 재생 시간을 0부터 다시 시작
             this.stateStartTime = System.currentTimeMillis()

@@ -42,6 +42,7 @@ android {
 
 dependencies {
     implementation(project(":a2dg"))
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.constraintlayout)

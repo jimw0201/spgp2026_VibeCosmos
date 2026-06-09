@@ -20,7 +20,7 @@ class VibeCosmosActivity : BaseGameActivity() {
         } else {
             @Suppress("DEPRECATION")
             intent.getSerializableExtra("SELECTED_SONG") as? SongConfig
-        } ?: SongConfig("Default", R.raw.title, R.mipmap.stage_bg1, "default.txt", 600f)
+        } ?: SongConfig("Default", "title", "stage_bg1", "default.txt", 600f)
 
         gctx.metrics.setSize(1600f, 900f)
 
