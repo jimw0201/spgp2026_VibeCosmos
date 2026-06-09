@@ -11,6 +11,9 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
     lateinit var lane: Player.State
     private var speed: Float = 0f
 
+    var lengthMs: Long = 0L
+    val isLongNote: Boolean get() = lengthMs > 0L
+
     // 베지에 제어점 초기화
     private var p0X = 1600f
     private var p0Y = 0f
@@ -35,19 +38,16 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
             return fixedCollisionRect
         }
 
-    fun reset(lane: Player.State, speed: Float) {
+    fun reset(lane: Player.State, speed: Float, lengthMs: Long = 0L) {
         this.lane = lane
         this.speed = speed
         this.progress = 0f
+        this.lengthMs = lengthMs
 
         val targetLaneY = if (lane == Player.State.UP_ATK) 300f else 500f
 
-        p0X = 1600f
-        p1X = 1400f
-        p2X = 1200f
-
-        p2Y = targetLaneY
-        p1Y = targetLaneY
+        p0X = 1600f; p1X = 1400f; p2X = 1200f
+        p2Y = targetLaneY; p1Y = targetLaneY
 
         if (lane == Player.State.UP_ATK) {
             p0Y = -50f
@@ -65,7 +65,6 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
         val desiredHeight = desiredWidth * aspectRatio
 
         setSize(desiredWidth, desiredHeight)
-
         setCenter(p0X, p0Y)
     }
 
@@ -91,5 +90,6 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
 
     override fun onRecycle() {
         progress = 0f
+        lengthMs = 0L
     }
 }

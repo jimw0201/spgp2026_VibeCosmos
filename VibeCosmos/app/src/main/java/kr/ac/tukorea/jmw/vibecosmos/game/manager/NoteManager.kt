@@ -13,7 +13,7 @@ class NoteManager(
     private val world: World<MainScene.Layer>,
     private val config: SongConfig
 ) {
-    data class NoteInfo(val timeMs: Long, val lane: Player.State)
+    data class NoteInfo(val timeMs: Long, val lane: Player.State, val lengthMs: Long = 0L)
     private val noteQueue: Queue<NoteInfo> = LinkedList()
 
     private var currentTimeMs: Long = 0
@@ -27,11 +27,15 @@ class NoteManager(
             gctx.view.context.assets.open(config.chartFileName).bufferedReader().useLines { lines ->
                 lines.forEach { line ->
                     val parts = line.split("|")
-                    if (parts.size == 2) {
+                    
+                    if (parts.size >= 2) {
                         val time = parts[0].trim().toLong()
                         val laneIdx = parts[1].trim().toInt()
                         val lane = if (laneIdx == 0) Player.State.UP_ATK else Player.State.DOWN_ATK
-                        noteQueue.add(NoteInfo(time, lane))
+
+                        val lengthMs = if (parts.size == 3) parts[2].trim().toLong() else 0L
+
+                        noteQueue.add(NoteInfo(time, lane, lengthMs))
                     }
                 }
             }
@@ -47,7 +51,7 @@ class NoteManager(
 
         while (noteQueue.isNotEmpty() && (noteQueue.peek()!!.timeMs - travelTime) <= currentTimeMs) {
             val info = noteQueue.poll()!!
-            spawnNote(info.lane)
+            spawnNote(info.lane, info.lengthMs)
         }
 
         // 화면 밖으로 나간 노트 체크
@@ -64,9 +68,9 @@ class NoteManager(
         }
     }
 
-    private fun spawnNote(lane: Player.State) {
+    private fun spawnNote(lane: Player.State, lengthMs: Long) {
         val note = world.obtain(Note::class.java) ?: Note(gctx)
-        note.reset(lane, config.noteSpeed)
+        note.reset(lane, config.noteSpeed, lengthMs)
         world.add(note, MainScene.Layer.NOTES)
     }
 }
