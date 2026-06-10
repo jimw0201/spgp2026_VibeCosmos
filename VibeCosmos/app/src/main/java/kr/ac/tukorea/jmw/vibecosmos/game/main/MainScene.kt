@@ -126,6 +126,7 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
 
     private fun checkLongNoteHold(elapsedSeconds: Float) {
         val notes = world.objectsAt(Layer.NOTES).toMutableList()
+        var anyNoteHolding = false
 
         for (obj in notes) {
             val note = obj as? Note ?: continue
@@ -146,7 +147,15 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
 
                 if (isTouchMovingOrHolding) {
                     scoreManager.addHoldScore(elapsedSeconds)
-                    player.keepAttackAnimation()
+                    anyNoteHolding = true
+
+                    if (player.state != Player.State.HOLD_ATK) {
+                        player.state = Player.State.HOLD_ATK
+                    }
+
+                    val targetY = if (note.lane == Player.State.UP_ATK) 300f else 500f
+                    player.setCenter(player.x, targetY)
+
                 } else {
                     note.isHolding = false
                     scoreManager.onMiss()
@@ -156,6 +165,10 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
             else if (noteTailX < TARGET_X) {
                 world.remove(note, Layer.NOTES)
             }
+        }
+
+        if (!anyNoteHolding && player.state == Player.State.HOLD_ATK) {
+            player.state = Player.State.RUN
         }
     }
 
