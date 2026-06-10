@@ -59,9 +59,21 @@ class NoteManager(
         var i = 0
         while (i < notes.size) {
             val note = notes[i] as? Note
-            if (note != null && note.x < 100f) {
-                onMiss()
-                world.remove(note, MainScene.Layer.NOTES)
+            if (note != null) {
+
+                val isOutOfScreen = if (note.isLongNote) {
+                    val noteLengthPx = note.speed * (note.lengthMs / 1000f)
+                    (note.x + noteLengthPx) < 100f
+                } else {
+                    note.x < 100f
+                }
+
+                if (isOutOfScreen) {
+                    onMiss()
+                    world.remove(note, MainScene.Layer.NOTES)
+                } else {
+                    i++
+                }
             } else {
                 i++
             }

@@ -14,7 +14,7 @@ import android.media.MediaPlayer
 
 class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
     enum class Layer {
-        BG, PLAYER, NOTES, UI
+        BG, NOTES, PLAYER, UI
     }
     override val clipsRect = true
 
@@ -33,11 +33,16 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
     private var sceneStartTime = 0L
     private val TARGET_X = 400f
 
+    private var isUpLaneHolding = false
+    private var isDownLaneHolding = false
+
+    private val PERFECT_RANGE = 50f
+    private val GREAT_RANGE = 100f
+
     init {
         val context = gctx.view.context
         readyMediaPlayer = MediaPlayer.create(context, R.raw.readygo)
 
-        // config의 String 정보를 활용해 dynamic하게 리소스 ID를 가져와 세팅
         val musicResId = config.getMusicResId(context)
         mediaPlayer = MediaPlayer.create(context, musicResId).apply {
             isLooping = false
@@ -98,6 +103,7 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
         }
 
         checkPlayerCollision()
+        checkLongNoteHold(elapsedSeconds)
     }
 
     private fun checkPlayerCollision() {
@@ -106,10 +112,48 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
 
         while (it.hasNext()) {
             val note = it.next() as? Note ?: continue
+
+            if (note.isLongNote) continue
+
             if (android.graphics.RectF.intersects(player.collisionRect, note.collisionRect)) {
                 soundManager.playDamage()
                 player.hp -= 10
                 scoreManager.resetCombo()
+                world.remove(note, Layer.NOTES)
+            }
+        }
+    }
+
+    private fun checkLongNoteHold(elapsedSeconds: Float) {
+        val notes = world.objectsAt(Layer.NOTES).toMutableList()
+
+        for (obj in notes) {
+            val note = obj as? Note ?: continue
+            if (!note.isLongNote) continue
+
+            val noteLengthPx = note.speed * (note.lengthMs / 1000f)
+            val noteHeadX = note.x
+            val noteTailX = noteHeadX + noteLengthPx
+
+            if (TARGET_X in noteHeadX..noteTailX) {
+                if (!note.isHolding) {
+                    scoreManager.onMiss()
+                    player.hp -= 1
+                    continue
+                }
+
+                val isTouchMovingOrHolding = if (note.lane == Player.State.UP_ATK) isUpLaneHolding else isDownLaneHolding
+
+                if (isTouchMovingOrHolding) {
+                    scoreManager.addHoldScore(elapsedSeconds)
+                    player.keepAttackAnimation()
+                } else {
+                    note.isHolding = false
+                    scoreManager.onMiss()
+                    player.hp -= 1
+                }
+            }
+            else if (noteTailX < TARGET_X) {
                 world.remove(note, Layer.NOTES)
             }
         }
@@ -133,31 +177,61 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
         }
 
         if (closestNote != null) {
-            val isHit = scoreManager.addScore(minDistance)
-            if (isHit) {
+            if (closestNote.isLongNote) {
+                scoreManager.addScore(minDistance)
+                closestNote.isHolding = true
                 soundManager.playHit()
-                world.remove(closestNote, Layer.NOTES)
+            } else {
+                val isHit = scoreManager.addScore(minDistance)
+                if (isHit) {
+                    soundManager.playHit()
+                    world.remove(closestNote, Layer.NOTES)
+                }
             }
         }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (event.action != MotionEvent.ACTION_DOWN) return super.onTouchEvent(event)
-
-        val laneIdx = if (event.x > gctx.view.width / 2) 1 else 0
         val screenCenter = gctx.view.width / 2
+        val isRightSide = event.x > screenCenter
 
-        val attackState = if (event.x > screenCenter) {
-            soundManager.playSwingDown()
-            player.attackDown()
-            Player.State.DOWN_ATK
-        } else {
-            soundManager.playSwingUp()
-            player.attackUp()
-            Player.State.UP_ATK
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
+                if (isRightSide) {
+                    isDownLaneHolding = true
+                    soundManager.playSwingDown()
+                    player.attackDown()
+                    checkHit(Player.State.DOWN_ATK)
+                } else {
+                    isUpLaneHolding = true
+                    soundManager.playSwingUp()
+                    player.attackUp()
+                    checkHit(Player.State.UP_ATK)
+                }
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                if (isRightSide) {
+                    isDownLaneHolding = true
+                    isUpLaneHolding = false
+                } else {
+                    isUpLaneHolding = true
+                    isDownLaneHolding = false
+                }
+            }
+
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_CANCEL -> {
+                if (isRightSide) {
+                    isDownLaneHolding = false
+                } else {
+                    isUpLaneHolding = false
+                }
+
+                if (!isUpLaneHolding && !isDownLaneHolding) {
+                    player.state = Player.State.RUN
+                }
+            }
         }
-
-        checkHit(attackState)
         return true
     }
 }

@@ -59,7 +59,7 @@ class Player(gctx: GameContext): AnimSprite(
     // 플레이어의 현재 상태를 관리하는 프로퍼티
     var state = State.RUN
         set(value) {
-            if (field == value && value == State.RUN) return
+            if (field == value) return
 
             field = value
 
@@ -87,25 +87,19 @@ class Player(gctx: GameContext): AnimSprite(
     override fun draw(canvas: Canvas) {
         syncDstRect()
 
-        // 현재 상태가 시작된 후 경과한 시간 계산
         val elapsedSeconds = (System.currentTimeMillis() - stateStartTime) / 1000f
-
-        // 현재 애니메이션의 1회 전체 재생에 걸리는 총 시간
         val totalDuration = frameCount / fps
 
-        // 달리기 상태가 아닌데 애니메이션 1회 재생이 끝났다면 다시 RUN 상태로 복귀
         if (state != State.RUN && elapsedSeconds >= totalDuration) {
             state = State.RUN
         }
 
-        // 현재 경과 시간에 따른 재생 프레임 인덱스 계산
+        // 경과 시간에 따른 재생 프레임 인덱스 계산
         val frameIndex = ((elapsedSeconds * fps).toInt()) % frameCount
 
-        // 프레임 인덱스를 바탕으로 스프라이트 시트 내의 잘라낼 행, 열 계산
         val col = frameIndex % columns
         val row = frameIndex / columns
 
-        // 워논 이미지에서 현재 프레임 영역을 지정하여 화면에 그림
         srcRect?.set(
             col * frameWidth,
             row * frameHeight,
@@ -123,6 +117,10 @@ class Player(gctx: GameContext): AnimSprite(
     // 하단 공격 함수
     fun attackDown() {
         state = State.DOWN_ATK
+    }
+
+    fun keepAttackAnimation() {
+        this.stateStartTime = System.currentTimeMillis()
     }
 
     companion object {

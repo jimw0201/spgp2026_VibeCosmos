@@ -13,6 +13,9 @@ class ScoreManager {
 
     val JUDGMENT_DURATION = 0.5f
 
+    private var holdTickAccumulator = 0f
+    private val TICK_INTERVAL = 0.1f
+
     // 판정 메시지 노출 시간 업데이트
     fun update(elapsedSeconds: Float) {
         if (lastJudgment.isNotEmpty()) {
@@ -50,6 +53,19 @@ class ScoreManager {
         val multiplier = 1.0f + (Math.min(combo / 10, 10) * 0.1f)
         score += (baseScore * multiplier).toInt()
         return true
+    }
+
+    fun addHoldScore(elapsedSeconds: Float) {
+        lastJudgment = "HOLD"
+        judgmentDisplayTime = 0f
+
+        holdTickAccumulator += elapsedSeconds
+        if (holdTickAccumulator >= TICK_INTERVAL) {
+            holdTickAccumulator -= TICK_INTERVAL
+            combo++
+            val multiplier = 1.0f + (Math.min(combo / 10, 10) * 0.1f)
+            score += (10 * multiplier).toInt()
+        }
     }
 
     // 미스 발생 시 처리

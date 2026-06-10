@@ -11,10 +11,13 @@ import kr.ac.tukorea.jmw.vibecosmos.R
 
 class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCollidable {
     lateinit var lane: Player.State
-    private var speed: Float = 0f
+    var speed: Float = 0f
+        private set
 
     var lengthMs: Long = 0L
     val isLongNote: Boolean get() = lengthMs > 0L
+
+    var isHolding: Boolean = false
 
     private var headBitmap: Bitmap? = null
     private var lineBitmap: Bitmap? = null
@@ -119,7 +122,6 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
 
     override fun draw(canvas: Canvas) {
         if (!isLongNote) {
-            // 일반 노트는 기존 프레임워크(Sprite) 기능대로 그림
             super.draw(canvas)
             return
         }
@@ -130,10 +132,8 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
         val halfW = width / 2f
         val halfH = height / 2f
 
-        // 1. 현재 노트 속도와 남은 시간(ms)을 기준으로 롱노트 몸통의 가로 픽셀 길이를 계산
         val noteLengthPx = speed * (lengthMs / 1000f)
 
-        // 2. [몸통 줄 (Line)] 그리기 (머리 중심부터 꼬리 중심까지 늘려서 채움)
         lineBitmap?.let {
             componentRect.set(
                 currentHeadX,
@@ -144,7 +144,6 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
             canvas.drawBitmap(it, null, componentRect, null)
         }
 
-        // 3. [꼬리 (Tail)] 그리기 (몸통 줄이 끝나는 지점에 배치)
         tailBitmap?.let {
             val tailLeft = currentHeadX + noteLengthPx - halfW
             componentRect.set(
@@ -156,7 +155,6 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
             canvas.drawBitmap(it, null, componentRect, null)
         }
 
-        // 4. [머리 (Head)] 그리기 (가장 위에 덮어씌움)
         headBitmap?.let {
             componentRect.set(
                 currentHeadX - halfW,
@@ -171,5 +169,6 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
     override fun onRecycle() {
         progress = 0f
         lengthMs = 0L
+        isHolding = false
     }
 }
