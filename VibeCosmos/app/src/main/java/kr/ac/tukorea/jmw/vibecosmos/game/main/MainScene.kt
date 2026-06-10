@@ -11,11 +11,13 @@ import kr.ac.tukorea.jmw.vibecosmos.game.manager.NoteManager
 import kr.ac.tukorea.jmw.vibecosmos.game.manager.ScoreManager
 import kr.ac.tukorea.jmw.vibecosmos.game.manager.SoundManager
 import android.media.MediaPlayer
+import android.util.Log
 
 class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
     enum class Layer {
         BG, NOTES, PLAYER, UI
     }
+
     override val clipsRect = true
 
     private val player = Player(gctx)
@@ -36,8 +38,8 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
     private var isUpLaneHolding = false
     private var isDownLaneHolding = false
 
-    private val PERFECT_RANGE = 50f
-    private val GREAT_RANGE = 100f
+    private var upLaneTouchStartMs = 0L
+    private var downLaneTouchStartMs = 0L
 
     init {
         val context = gctx.view.context
@@ -145,7 +147,8 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
                     continue
                 }
 
-                val isTouchMovingOrHolding = if (note.lane == Player.State.UP_ATK) isUpLaneHolding else isDownLaneHolding
+                val isTouchMovingOrHolding =
+                    if (note.lane == Player.State.UP_ATK) isUpLaneHolding else isDownLaneHolding
 
                 if (isTouchMovingOrHolding) {
                     scoreManager.addHoldScore(elapsedSeconds)
@@ -167,9 +170,7 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
 
                     world.remove(note, Layer.NOTES)
                 }
-            }
-
-            else if (noteTailX < TARGET_X) {
+            } else if (noteTailX < TARGET_X) {
                 world.remove(note, Layer.NOTES)
             }
         }
@@ -211,9 +212,20 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
         }
     }
 
+
+    // 채보 로그를 보려면 Logcat에서 CHART_MAKER 검색
     override fun onTouchEvent(event: MotionEvent): Boolean {
         val screenCenter = gctx.view.width / 2
         val isRightSide = event.x > screenCenter
+
+        val now = System.currentTimeMillis()
+        val currentMusicTime = if (isMusicStarted) {
+            mediaPlayer?.currentPosition?.toLong() ?: (now - sceneStartTime - READY_DURATION)
+        } else {
+            now - sceneStartTime - READY_DURATION
+        }
+
+        val isRecordable = currentMusicTime >= 0
 
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
@@ -222,11 +234,15 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
                     soundManager.playSwingDown()
                     player.attackDown()
                     checkHit(Player.State.DOWN_ATK)
+
+                    if (isRecordable) downLaneTouchStartMs = currentMusicTime
                 } else {
                     isUpLaneHolding = true
                     soundManager.playSwingUp()
                     player.attackUp()
                     checkHit(Player.State.UP_ATK)
+
+                    if (isRecordable) upLaneTouchStartMs = currentMusicTime
                 }
             }
 
@@ -243,8 +259,29 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
             MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_CANCEL -> {
                 if (isRightSide) {
                     isDownLaneHolding = false
+                    if (isRecordable && downLaneTouchStartMs > 0) {
+                        val duration = currentMusicTime - downLaneTouchStartMs
+
+                        if (duration < 300) {
+                            Log.d("CHART_MAKER", "$downLaneTouchStartMs | 1")
+                        } else {
+                            Log.d("CHART_MAKER", "$downLaneTouchStartMs | 1 | $duration")
+                        }
+                        downLaneTouchStartMs = 0L
+                    }
                 } else {
                     isUpLaneHolding = false
+
+                    if (isRecordable && upLaneTouchStartMs > 0) {
+                        val duration = currentMusicTime - upLaneTouchStartMs
+
+                        if (duration < 300) {
+                            Log.d("CHART_MAKER", "$upLaneTouchStartMs | 0")
+                        } else {
+                            Log.d("CHART_MAKER", "$upLaneTouchStartMs | 0 | $duration")
+                        }
+                        upLaneTouchStartMs = 0L
+                    }
                 }
 
                 if (!isUpLaneHolding && !isDownLaneHolding) {
