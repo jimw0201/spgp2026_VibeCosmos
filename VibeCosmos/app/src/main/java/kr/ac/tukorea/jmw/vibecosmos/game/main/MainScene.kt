@@ -140,6 +140,8 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
                 if (!note.isHolding) {
                     scoreManager.onMiss()
                     player.hp -= 1
+
+                    world.remove(note, Layer.NOTES)
                     continue
                 }
 
@@ -148,6 +150,8 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
                 if (isTouchMovingOrHolding) {
                     scoreManager.addHoldScore(elapsedSeconds)
                     anyNoteHolding = true
+
+                    note.isHolding = true
 
                     if (player.state != Player.State.HOLD_ATK) {
                         player.state = Player.State.HOLD_ATK
@@ -159,9 +163,12 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
                 } else {
                     note.isHolding = false
                     scoreManager.onMiss()
-                    player.hp -= 1
+                    player.hp -= 10
+
+                    world.remove(note, Layer.NOTES)
                 }
             }
+
             else if (noteTailX < TARGET_X) {
                 world.remove(note, Layer.NOTES)
             }

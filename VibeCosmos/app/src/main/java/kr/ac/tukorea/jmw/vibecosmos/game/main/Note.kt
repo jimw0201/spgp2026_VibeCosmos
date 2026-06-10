@@ -2,6 +2,7 @@ package kr.ac.tukorea.jmw.vibecosmos.game.main
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.RectF
 import kr.ac.tukorea.jmw.a2dg.objects.IBoxCollidable
 import kr.ac.tukorea.jmw.a2dg.objects.IRecyclable
@@ -18,6 +19,8 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
     val isLongNote: Boolean get() = lengthMs > 0L
 
     var isHolding: Boolean = false
+
+    private val alphaPaint = Paint()
 
     private var headBitmap: Bitmap? = null
     private var lineBitmap: Bitmap? = null
@@ -68,6 +71,7 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
         this.lane = lane
         this.speed = speed
         this.lengthMs = lengthMs
+        this.isHolding = false
 
         val targetLaneY = if (lane == Player.State.UP_ATK) 300f else 500f
 
@@ -134,6 +138,12 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
 
         val noteLengthPx = speed * (lengthMs / 1000f)
 
+        if (isHolding) {
+            alphaPaint.alpha = 120
+        } else {
+            alphaPaint.alpha = 255
+        }
+
         lineBitmap?.let {
             componentRect.set(
                 currentHeadX,
@@ -141,7 +151,7 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
                 currentHeadX + noteLengthPx,
                 currentY + halfH
             )
-            canvas.drawBitmap(it, null, componentRect, null)
+            canvas.drawBitmap(it, null, componentRect, alphaPaint)
         }
 
         tailBitmap?.let {
@@ -152,7 +162,7 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
                 tailLeft + width,
                 currentY + halfH
             )
-            canvas.drawBitmap(it, null, componentRect, null)
+            canvas.drawBitmap(it, null, componentRect, alphaPaint)
         }
 
         headBitmap?.let {
@@ -162,7 +172,7 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
                 currentHeadX + halfW,
                 currentY + halfH
             )
-            canvas.drawBitmap(it, null, componentRect, null)
+            canvas.drawBitmap(it, null, componentRect, alphaPaint)
         }
     }
 
