@@ -90,7 +90,7 @@ class NoteManager(
         if (noteQueue.isNotEmpty()) return false
 
         val activeNotes = world.objectsAt(MainScene.Layer.NOTES)
-        
+
         return activeNotes.isEmpty()
     }
 }

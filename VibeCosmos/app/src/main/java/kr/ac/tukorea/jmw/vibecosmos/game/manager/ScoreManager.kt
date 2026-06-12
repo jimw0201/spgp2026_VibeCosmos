@@ -10,6 +10,13 @@ class ScoreManager {
     var maxCombo: Int = 0
         private set
 
+    var perfectCount: Int = 0
+        private set
+    var greatCount: Int = 0
+        private set
+    var missCount: Int = 0
+        private set
+
     var lastJudgment: String = ""
         private set
 
@@ -42,12 +49,14 @@ class ScoreManager {
                 lastJudgment = "PERFECT"
                 combo++
                 if (combo > maxCombo) maxCombo = combo
+                perfectCount++
                 100
             }
             minDistance < 100f -> {
                 lastJudgment = "GREAT"
                 combo++
                 if (combo > maxCombo) maxCombo = combo
+                greatCount++
                 50
             }
             else -> {
@@ -83,6 +92,7 @@ class ScoreManager {
         lastJudgment = "MISS"
         judgmentDisplayTime = 0f
         combo = 0
+        missCount++
     }
 
     fun resetCombo() {

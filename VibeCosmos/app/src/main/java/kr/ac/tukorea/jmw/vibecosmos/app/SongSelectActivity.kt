@@ -1,14 +1,17 @@
 package kr.ac.tukorea.jmw.vibecosmos.app
 
 import android.content.Intent
+import android.media.MediaPlayer
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import kr.ac.tukorea.jmw.vibecosmos.game.data.SongConfig
 import kr.ac.tukorea.jmw.vibecosmos.R
 import kr.ac.tukorea.jmw.vibecosmos.databinding.ActivitySongSelectBinding
+import kr.ac.tukorea.jmw.vibecosmos.game.manager.SoundManager
 
 class SongSelectActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySongSelectBinding
+    private var mediaPlayer: MediaPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,10 +30,44 @@ class SongSelectActivity : AppCompatActivity() {
 
     // 게임 액티비티를 시작하는 함수
     private fun startGame(config: SongConfig) {
+        stopAndReleaseMediaPlayer()
         val intent = Intent(this, VibeCosmosActivity::class.java).apply {
             putExtra("SELECTED_SONG", config)
         }
         startActivity(intent)
+    }
 
+    private fun stopAndReleaseMediaPlayer() {
+        mediaPlayer?.let {
+            if (it.isPlaying) {
+                it.stop()
+            }
+            it.release()
+        }
+        mediaPlayer = null
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (mediaPlayer == null) {
+            mediaPlayer = MediaPlayer.create(this, R.raw.list).apply {
+                isLooping = true
+                val currentVol = SoundManager.bgmVolume
+                setVolume(currentVol, currentVol)
+                start()
+            }
+        } else if (!mediaPlayer!!.isPlaying) {
+            mediaPlayer!!.start()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        mediaPlayer?.pause()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopAndReleaseMediaPlayer()
     }
 }

@@ -154,6 +154,10 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
                 putExtra("FINAL_SCORE", scoreManager.score)
                 putExtra("MAX_COMBO", scoreManager.maxCombo)
                 putExtra("SELECTED_SONG", config)
+
+                putExtra("PERFECT_COUNT", scoreManager.perfectCount)
+                putExtra("GREAT_COUNT", scoreManager.greatCount)
+                putExtra("MISS_COUNT", scoreManager.missCount)
             }
             activity.startActivity(intent)
             activity.finish()
