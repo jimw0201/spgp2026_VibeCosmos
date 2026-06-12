@@ -1,5 +1,6 @@
 package kr.ac.tukorea.jmw.vibecosmos.game.main
 
+import android.content.Intent
 import android.view.MotionEvent
 import kr.ac.tukorea.jmw.a2dg.scene.Scene
 import kr.ac.tukorea.jmw.a2dg.view.GameContext
@@ -12,6 +13,8 @@ import kr.ac.tukorea.jmw.vibecosmos.game.manager.ScoreManager
 import kr.ac.tukorea.jmw.vibecosmos.game.manager.SoundManager
 import android.media.MediaPlayer
 import android.util.Log
+import kr.ac.tukorea.jmw.vibecosmos.app.ScoreResultActivity
+import kotlin.jvm.java
 
 class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
     enum class Layer {
@@ -39,6 +42,10 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
 
     private var upLaneTouchStartMs = 0L
     private var downLaneTouchStartMs = 0L
+
+    private var isStageFinished = false
+    private var finishTimerMs = 0L
+    private val DELAY_BEFORE_RESULT_MS = 3000L
 
     init {
         val context = gctx.view.context
@@ -73,25 +80,31 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
         hud.draw(canvas, scoreManager, player)
     }
 
+    private var isReadySoundPlayed = false
+
     override fun update(gctx: GameContext) {
         super.update(gctx)
         val elapsedSeconds = gctx.frameTime
         scoreManager.update(elapsedSeconds)
 
         val now = System.currentTimeMillis()
-        if (!isReadyStarted) {
-            soundManager.playReadyGo()
 
+        if (!isReadyStarted) {
             sceneStartTime = now
             isReadyStarted = true
         }
 
-        val relativeTime = (now - sceneStartTime) - READY_DURATION
+        val timePassed = now - sceneStartTime
+        if (timePassed >= 400L && !isReadySoundPlayed) {
+            soundManager.playReadyGo()
+            isReadySoundPlayed = true
+        }
+
+        val relativeTime = timePassed - READY_DURATION
 
         if (!isMusicStarted && relativeTime >= 0) {
             val currentVol = SoundManager.bgmVolume
             mediaPlayer?.setVolume(currentVol, currentVol)
-
             mediaPlayer?.start()
             isMusicStarted = true
         }
@@ -102,12 +115,49 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
             relativeTime
         }
 
-        noteManager.update(currentMusicPos) {
-            scoreManager.onMiss()
-        }
+        if (!isStageFinished) {
+            noteManager.update(currentMusicPos) {
+                scoreManager.onMiss()
+            }
 
-        checkPlayerCollision()
-        checkLongNoteHold(elapsedSeconds)
+            checkPlayerCollision()
+            checkLongNoteHold(elapsedSeconds)
+
+            val isMusicEnded = mediaPlayer?.isPlaying == false && isMusicStarted
+            if (isMusicEnded && noteManager.isAllNotesCleared()) {
+                isStageFinished = true
+                finishTimerMs = now
+            }
+        } else {
+            if (now - finishTimerMs >= DELAY_BEFORE_RESULT_MS) {
+                finishTimerMs = Long.MAX_VALUE
+                navigateToResultScreen()
+            }
+        }
+    }
+
+    private fun navigateToResultScreen() {
+        val context = gctx.view.context
+
+        mediaPlayer?.let {
+            if (it.isPlaying) it.stop()
+            it.release()
+        }
+        mediaPlayer = null
+
+        soundManager.release()
+
+        val activity = context as? android.app.Activity
+
+        activity?.runOnUiThread {
+            val intent = Intent(activity, ScoreResultActivity::class.java).apply {
+                putExtra("FINAL_SCORE", scoreManager.score)
+                putExtra("MAX_COMBO", scoreManager.maxCombo)
+                putExtra("SELECTED_SONG", config)
+            }
+            activity.startActivity(intent)
+            activity.finish()
+        }
     }
 
     private fun checkPlayerCollision() {
@@ -323,7 +373,7 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
                     }
                 } else {
                     isUpLaneHolding = false
-                    
+
                     checkLongNoteRelease(Player.State.UP_ATK)
 
                     if (isRecordable && upLaneTouchStartMs > 0) {

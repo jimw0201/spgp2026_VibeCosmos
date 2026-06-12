@@ -85,4 +85,12 @@ class NoteManager(
         note.reset(lane, config.noteSpeed, lengthMs)
         world.add(note, MainScene.Layer.NOTES)
     }
+
+    fun isAllNotesCleared(): Boolean {
+        if (noteQueue.isNotEmpty()) return false
+
+        val activeNotes = world.objectsAt(MainScene.Layer.NOTES)
+        
+        return activeNotes.isEmpty()
+    }
 }

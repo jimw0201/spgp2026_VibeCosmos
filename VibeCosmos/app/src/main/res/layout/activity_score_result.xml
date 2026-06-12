@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#12121A"
+    tools:context=".app.ScoreResultActivity">
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#05FFFFFF" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="80dp"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:letterSpacing="0.2"
+            android:text="STAGE CLEAR"
+            android:textColor="#00E5FF"
+            android:textSize="32sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:letterSpacing="0.1"
+            android:text="SCORE"
+            android:textColor="#888899"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tvFinalScore"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:text="000,000"
+            android:textColor="#FFFFFF"
+            android:textSize="48sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:letterSpacing="0.1"
+            android:text="MAX COMBO"
+            android:textColor="#888899"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tvMaxCombo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textColor="#FFCA28"
+            android:textSize="36sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginBottom="50dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnRetry"
+            android:layout_width="160dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="20dp"
+            android:text="RETRY"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:backgroundTint="#252535"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnSongSelect"
+            android:layout_width="160dp"
+            android:layout_height="wrap_content"
+            android:text="SONG SELECT"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:backgroundTint="#00E5FF"
+            android:textColor="#12121A" />
+    </LinearLayout>
+
+</FrameLayout>

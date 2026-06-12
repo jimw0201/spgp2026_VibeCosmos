@@ -6,6 +6,10 @@ class ScoreManager {
         private set
     var combo: Int = 0
         private set
+
+    var maxCombo: Int = 0
+        private set
+
     var lastJudgment: String = ""
         private set
 
@@ -37,11 +41,13 @@ class ScoreManager {
             minDistance < 50f -> {
                 lastJudgment = "PERFECT"
                 combo++
+                if (combo > maxCombo) maxCombo = combo
                 100
             }
             minDistance < 100f -> {
                 lastJudgment = "GREAT"
                 combo++
+                if (combo > maxCombo) maxCombo = combo
                 50
             }
             else -> {
@@ -66,6 +72,7 @@ class ScoreManager {
         if (holdTickAccumulator >= TICK_INTERVAL) {
             holdTickAccumulator -= TICK_INTERVAL
             combo++
+            if (combo > maxCombo) maxCombo = combo
             val multiplier = 1.0f + (Math.min(combo / 10, 10) * 0.1f)
             score += (10 * multiplier).toInt()
         }

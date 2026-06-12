@@ -18,6 +18,10 @@
             android:name=".app.VibeCosmosActivity"
             android:exported="false" />
         <activity
+            android:name=".app.ScoreResultActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:exported="false" />
+        <activity
             android:name=".app.MainActivity"
             android:exported="true">
             <intent-filter>

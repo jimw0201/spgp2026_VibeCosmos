@@ -66,6 +66,9 @@ class MainActivity : AppCompatActivity() {
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
+
+        SoundManager.bgmVolume = binding.sbBgmVolume.progress / 100f
+        SoundManager.sfxVolume = binding.sbSfxVolume.progress / 100f
     }
 
     fun onBtnStartGame(view: View) {
