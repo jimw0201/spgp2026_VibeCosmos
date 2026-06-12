@@ -9,7 +9,8 @@ class ScoreManager {
     var lastJudgment: String = ""
         private set
 
-    private var judgmentDisplayTime = 0f
+    var judgmentDisplayTime: Float = 0f
+        private set
 
     val JUDGMENT_DURATION = 0.5f
 
@@ -56,8 +57,10 @@ class ScoreManager {
     }
 
     fun addHoldScore(elapsedSeconds: Float) {
-        lastJudgment = "HOLD"
-        judgmentDisplayTime = 0f
+        if (lastJudgment == "" || lastJudgment == "HOLD") {
+            lastJudgment = "HOLD"
+            judgmentDisplayTime = 0f
+        }
 
         holdTickAccumulator += elapsedSeconds
         if (holdTickAccumulator >= TICK_INTERVAL) {

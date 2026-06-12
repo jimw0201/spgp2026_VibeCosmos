@@ -36,8 +36,7 @@ class Hud {
     }
 
     private val judgmentPaint = Paint().apply {
-        color = Color.YELLOW
-        textSize = 100f
+        textSize = 90f
         isFakeBoldText = true
         textAlign = Paint.Align.CENTER
     }
@@ -66,12 +65,28 @@ class Hud {
 
         // 콤보 표시
         if (scoreManager.combo > 0) {
-            canvas.drawText("${scoreManager.combo} COMBO", 800f, 550f, comboPaint)
+            canvas.drawText("${scoreManager.combo} COMBO", 800f, 180f, comboPaint)
         }
 
-        // 판정 결과 표시
-        if (scoreManager.lastJudgment.isNotEmpty()) {
-            canvas.drawText(scoreManager.lastJudgment, 800f, 450f, judgmentPaint)
+        val judgment = scoreManager.lastJudgment
+
+        if (judgment.isNotEmpty() && judgment != "HOLD") {
+
+            when (judgment) {
+                "PERFECT" -> judgmentPaint.color = Color.GREEN
+                "GREAT"   -> judgmentPaint.color = Color.YELLOW
+                else      -> judgmentPaint.color = Color.RED
+            }
+
+            val progress = Math.min(scoreManager.judgmentDisplayTime / scoreManager.JUDGMENT_DURATION, 1.0f)
+
+            val alpha = ((1.0f - progress) * 255).toInt()
+            judgmentPaint.alpha = alpha
+
+            val baseEventY = if (player.state == Player.State.UP_ATK || (player.state == Player.State.HOLD_ATK && player.y < 400f)) 250f else 450f
+            val animatedY = baseEventY - (progress * 80f)
+
+            canvas.drawText(judgment, 650f, animatedY, judgmentPaint)
         }
     }
 }
