@@ -7,7 +7,6 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import kr.ac.tukorea.jmw.vibecosmos.R
 import kr.ac.tukorea.jmw.vibecosmos.databinding.ActivityMainBinding
-import kr.ac.tukorea.jmw.vibecosmos.game.main.TitleCharacterView
 import kr.ac.tukorea.jmw.vibecosmos.game.manager.SongCatalog
 
 class MainActivity : AppCompatActivity() {

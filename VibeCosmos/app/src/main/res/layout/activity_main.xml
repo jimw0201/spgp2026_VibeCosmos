@@ -5,40 +5,28 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
     tools:context=".app.MainActivity">
 
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:src="@drawable/title2"
-        />
+        android:scaleType="fitXY"
+        android:src="@drawable/title2" />
 
     <FrameLayout
         android:id="@+id/titleCharacterContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <LinearLayout
+    <Button
+        android:id="@+id/button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_gravity="center"
-        android:gravity="center"
-        android:background="#8fff"
-        android:padding="40dp"
-        >
-        <Space
-            android:layout_width="wrap_content"
-            android:layout_height="40dp" />
-        <Button
-            android:id="@+id/button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Start Game"
-            android:onClick="onBtnStartGame"
-            />
+        android:text="Start Game"
+        android:onClick="onBtnStartGame"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginBottom="40dp" android:paddingLeft="40dp"
+        android:paddingRight="40dp"
+        android:textSize="18sp" />
 
-    </LinearLayout>
 </FrameLayout>

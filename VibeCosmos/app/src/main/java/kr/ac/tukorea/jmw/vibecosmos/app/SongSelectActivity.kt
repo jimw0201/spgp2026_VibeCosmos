@@ -17,7 +17,7 @@ class SongSelectActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // 곡 데이터 생성 (제목, 음원, 배경, 채보 파일명, 속도)
-        val song1 = SongConfig("Test 1", "music1", "stage_bg1", "chart1.txt", 600f)
+        val song1 = SongConfig("Fly↑High", "music1", "stage_bg1", "chart1.txt", 600f)
         val song2 = SongConfig("Test 2", "title", "stage_bg2", "chart2.txt", 900f)
 
         // 각각의 곡 선택 버튼 클릭 시 해당 곡 정보를 넘기며 게임 화면으로 이동
