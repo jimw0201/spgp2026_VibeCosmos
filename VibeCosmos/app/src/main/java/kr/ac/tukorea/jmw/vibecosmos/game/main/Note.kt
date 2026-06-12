@@ -48,20 +48,27 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
 
     override val collisionRect: RectF
         get() {
+            val halfW = width / 2f
+            val halfH = height / 2f
+
             if (isLongNote) {
-                val totalWidth = speed * (lengthMs / 1000f)
+                val noteLengthPx = speed * (lengthMs / 1000f)
+
+                val slimHalfH = halfH * 0.3f
+
                 fixedCollisionRect.set(
-                    x - width / 2f,
-                    y - height / 2f,
-                    x + width / 2f + totalWidth,
-                    y + height / 2f
+                    x - halfW,
+                    y - slimHalfH,
+                    x + noteLengthPx + halfW,
+                    y + slimHalfH
                 )
             } else {
+                val slimHalfH = halfH * 0.6f
                 fixedCollisionRect.set(
-                    x - width / 2f,
-                    y - height / 2f,
-                    x + width / 2f,
-                    y + height / 2f
+                    x - halfW,
+                    y - slimHalfH,
+                    x + halfW,
+                    y + slimHalfH
                 )
             }
             return fixedCollisionRect

@@ -115,13 +115,22 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
         while (it.hasNext()) {
             val note = it.next() as? Note ?: continue
 
-            if (note.isLongNote) continue
-
             if (android.graphics.RectF.intersects(player.collisionRect, note.collisionRect)) {
-                soundManager.playDamage()
-                player.hp -= 10
-                scoreManager.resetCombo()
-                world.remove(note, Layer.NOTES)
+
+                if (note.isLongNote) {
+                    if (!note.isHolding) {
+                        soundManager.playDamage()
+                        player.hp -= 10
+                        scoreManager.resetCombo()
+
+                        world.remove(note, Layer.NOTES)
+                    }
+                } else {
+                    soundManager.playDamage()
+                    player.hp -= 10
+                    scoreManager.resetCombo()
+                    world.remove(note, Layer.NOTES)
+                }
             }
         }
     }
@@ -139,13 +148,6 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
             val noteTailX = noteHeadX + noteLengthPx
 
             if (TARGET_X in noteHeadX..noteTailX) {
-                if (!note.isHolding) {
-                    scoreManager.onMiss()
-                    player.hp -= 1
-
-                    world.remove(note, Layer.NOTES)
-                    continue
-                }
 
                 val isTouchMovingOrHolding =
                     if (note.lane == Player.State.UP_ATK) isUpLaneHolding else isDownLaneHolding
@@ -153,7 +155,6 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
                 if (isTouchMovingOrHolding) {
                     scoreManager.addHoldScore(elapsedSeconds)
                     anyNoteHolding = true
-
                     note.isHolding = true
 
                     if (player.state != Player.State.HOLD_ATK) {
@@ -164,14 +165,21 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
                     player.setCenter(player.x, targetY)
 
                 } else {
-                    note.isHolding = false
-                    scoreManager.onMiss()
-                    player.hp -= 10
-
-                    world.remove(note, Layer.NOTES)
+                    if (note.isHolding) {
+                        note.isHolding = false
+                        scoreManager.onMiss()
+                        world.remove(note, Layer.NOTES)
+                        continue
+                    }
                 }
-            } else if (noteTailX < TARGET_X) {
-                world.remove(note, Layer.NOTES)
+            }
+
+            else {
+                if (noteTailX < TARGET_X && note.isHolding) {
+                    note.isHolding = false
+                    world.remove(note, Layer.NOTES)
+                    continue
+                }
             }
         }
 
