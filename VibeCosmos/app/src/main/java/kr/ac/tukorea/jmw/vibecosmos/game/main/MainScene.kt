@@ -150,7 +150,6 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
             val noteTailX = noteHeadX + noteLengthPx
 
             if (TARGET_X in noteHeadX..noteTailX) {
-
                 val isTouchMovingOrHolding =
                     if (note.lane == Player.State.UP_ATK) isUpLaneHolding else isDownLaneHolding
 
@@ -165,7 +164,6 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
 
                     val targetY = if (note.lane == Player.State.UP_ATK) 300f else 500f
                     player.setCenter(player.x, targetY)
-
                 } else {
                     if (note.isHolding) {
                         note.isHolding = false
@@ -175,10 +173,20 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
                     }
                 }
             }
-            else {
-                if (noteTailX < TARGET_X && note.isHolding) {
-                    note.isHolding = false
-                    world.remove(note, Layer.NOTES)
+
+            else if (noteTailX < TARGET_X) {
+                val isTouchMovingOrHolding =
+                    if (note.lane == Player.State.UP_ATK) isUpLaneHolding else isDownLaneHolding
+
+                if (note.isHolding) {
+                    if (isTouchMovingOrHolding) {
+                        note.isHolding = false
+                        scoreManager.onMiss()
+                        world.remove(note, Layer.NOTES)
+                    } else {
+                        note.isHolding = false
+                        world.remove(note, Layer.NOTES)
+                    }
                     continue
                 }
             }
@@ -223,6 +231,31 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
         }
     }
 
+    private fun checkLongNoteRelease(attackState: Player.State) {
+        val notes = world.objectsAt(Layer.NOTES)
+        val MAX_RELEASE_DISTANCE = 150f
+
+        for (obj in notes) {
+            val note = obj as? Note ?: continue
+            if (!note.isLongNote || note.lane != attackState || !note.isHolding) continue
+
+            val noteLengthPx = note.speed * (note.lengthMs / 1000f)
+            val noteTailX = note.x + noteLengthPx
+
+            val distance = Math.abs(noteTailX - TARGET_X)
+
+            if (distance <= MAX_RELEASE_DISTANCE) {
+                soundManager.playHit()
+                note.isHolding = false
+                world.remove(note, Layer.NOTES)
+            } else {
+                note.isHolding = false
+                scoreManager.onMiss()
+                world.remove(note, Layer.NOTES)
+            }
+            break
+        }
+    }
 
     // 채보 로그를 보려면 Logcat에서 CHART_MAKER 검색
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -276,9 +309,11 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
             MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_CANCEL -> {
                 if (isRightSide) {
                     isDownLaneHolding = false
+
+                    checkLongNoteRelease(Player.State.DOWN_ATK)
+
                     if (isRecordable && downLaneTouchStartMs > 0) {
                         val duration = currentMusicTime - downLaneTouchStartMs
-
                         if (duration < 300) {
                             Log.d("CHART_MAKER", "$downLaneTouchStartMs | 1")
                         } else {
@@ -288,10 +323,11 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
                     }
                 } else {
                     isUpLaneHolding = false
+                    
+                    checkLongNoteRelease(Player.State.UP_ATK)
 
                     if (isRecordable && upLaneTouchStartMs > 0) {
                         val duration = currentMusicTime - upLaneTouchStartMs
-
                         if (duration < 300) {
                             Log.d("CHART_MAKER", "$upLaneTouchStartMs | 0")
                         } else {
