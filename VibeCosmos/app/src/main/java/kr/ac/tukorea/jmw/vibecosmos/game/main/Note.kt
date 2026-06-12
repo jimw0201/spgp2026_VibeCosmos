@@ -20,6 +20,8 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
 
     var isHolding: Boolean = false
 
+    var isHitValidated: Boolean = false
+
     private val alphaPaint = Paint()
 
     private var headBitmap: Bitmap? = null
@@ -79,6 +81,7 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
         this.speed = speed
         this.lengthMs = lengthMs
         this.isHolding = false
+        this.isHitValidated = false
 
         val targetLaneY = if (lane == Player.State.UP_ATK) 300f else 500f
 
@@ -187,5 +190,6 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
         progress = 0f
         lengthMs = 0L
         isHolding = false
+        isHitValidated = false
     }
 }

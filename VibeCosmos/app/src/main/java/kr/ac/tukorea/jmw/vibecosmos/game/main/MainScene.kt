@@ -152,7 +152,7 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
                 val isTouchMovingOrHolding =
                     if (note.lane == Player.State.UP_ATK) isUpLaneHolding else isDownLaneHolding
 
-                if (isTouchMovingOrHolding) {
+                if (isTouchMovingOrHolding && note.isHitValidated) {
                     scoreManager.addHoldScore(elapsedSeconds)
                     anyNoteHolding = true
                     note.isHolding = true
@@ -173,7 +173,6 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
                     }
                 }
             }
-
             else {
                 if (noteTailX < TARGET_X && note.isHolding) {
                     note.isHolding = false
@@ -207,6 +206,8 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
 
         if (closestNote != null) {
             if (closestNote.isLongNote) {
+                closestNote.isHitValidated = true
+
                 scoreManager.addScore(minDistance)
                 closestNote.isHolding = true
                 soundManager.playHit()
