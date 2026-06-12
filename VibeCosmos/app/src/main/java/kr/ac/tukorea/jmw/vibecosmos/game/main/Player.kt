@@ -59,7 +59,8 @@ class Player(gctx: GameContext): AnimSprite(
 
     var state = State.RUN
         set(value) {
-            if (field == value) return
+            if (field == value && value != State.HOLD_ATK) return
+
             field = value
 
             if (value == State.HOLD_ATK) {
@@ -129,8 +130,18 @@ class Player(gctx: GameContext): AnimSprite(
         canvas.drawBitmap(bitmap, srcRect, dstRect, null)
     }
 
-    fun attackUp() { state = State.UP_ATK }
-    fun attackDown() { state = State.DOWN_ATK }
+    fun attackUp(forceReset: Boolean = false) {
+        if (forceReset) {
+            state = State.RUN
+        }
+        state = State.UP_ATK
+    }
+    fun attackDown(forceReset: Boolean = false) {
+        if (forceReset) {
+            state = State.RUN
+        }
+        state = State.DOWN_ATK
+    }
 
     private data class Quad(val resId: Int, val frameCount: Int, val scale: Float, val fps: Float, val targetY: Float)
 

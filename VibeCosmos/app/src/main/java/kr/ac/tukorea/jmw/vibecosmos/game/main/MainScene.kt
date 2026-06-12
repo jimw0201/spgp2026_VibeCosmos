@@ -240,16 +240,22 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
                 if (isRightSide) {
                     isDownLaneHolding = true
                     soundManager.playSwingDown()
-                    player.attackDown()
-                    checkHit(Player.State.DOWN_ATK)
 
+                    if (player.state != Player.State.HOLD_ATK) {
+                        player.attackDown(forceReset = true)
+                    }
+
+                    checkHit(Player.State.DOWN_ATK)
                     if (isRecordable) downLaneTouchStartMs = currentMusicTime
                 } else {
                     isUpLaneHolding = true
                     soundManager.playSwingUp()
-                    player.attackUp()
-                    checkHit(Player.State.UP_ATK)
 
+                    if (player.state != Player.State.HOLD_ATK) {
+                        player.attackUp(forceReset = true)
+                    }
+
+                    checkHit(Player.State.UP_ATK)
                     if (isRecordable) upLaneTouchStartMs = currentMusicTime
                 }
             }
@@ -293,7 +299,9 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
                 }
 
                 if (!isUpLaneHolding && !isDownLaneHolding) {
-                    player.state = Player.State.RUN
+                    if (player.state == Player.State.HOLD_ATK) {
+                        player.state = Player.State.RUN
+                    }
                 }
             }
         }
