@@ -27,7 +27,6 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
     private val hud = Hud()
 
     private var mediaPlayer: MediaPlayer? = null
-    private var readyMediaPlayer: MediaPlayer? = null
     private var isMusicStarted = false
     private var isReadyStarted = false
 
@@ -43,11 +42,12 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
 
     init {
         val context = gctx.view.context
-        readyMediaPlayer = MediaPlayer.create(context, R.raw.readygo)
 
         val musicResId = config.getMusicResId(context)
         mediaPlayer = MediaPlayer.create(context, musicResId).apply {
             isLooping = false
+            val currentVol = SoundManager.bgmVolume
+            setVolume(currentVol, currentVol)
         }
     }
 
@@ -80,7 +80,8 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
 
         val now = System.currentTimeMillis()
         if (!isReadyStarted) {
-            readyMediaPlayer?.start()
+            soundManager.playReadyGo()
+
             sceneStartTime = now
             isReadyStarted = true
         }
@@ -88,10 +89,11 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
         val relativeTime = (now - sceneStartTime) - READY_DURATION
 
         if (!isMusicStarted && relativeTime >= 0) {
+            val currentVol = SoundManager.bgmVolume
+            mediaPlayer?.setVolume(currentVol, currentVol)
+
             mediaPlayer?.start()
             isMusicStarted = true
-            readyMediaPlayer?.release()
-            readyMediaPlayer = null
         }
 
         val currentMusicPos = if (isMusicStarted) {

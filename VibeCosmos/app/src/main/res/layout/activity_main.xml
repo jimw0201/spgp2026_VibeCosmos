@@ -1,32 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+<androidx.drawerlayout.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://tools.android.com/apk/res/tools"
+    android:id="@+id/drawerLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".app.MainActivity">
 
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="fitXY"
-        android:src="@drawable/title2" />
-
     <FrameLayout
-        android:id="@+id/titleCharacterContainer"
+        android:id="@+id/main"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Start Game"
-        android:onClick="onBtnStartGame"
-        android:layout_gravity="center_horizontal|bottom"
-        android:layout_marginBottom="40dp" android:paddingLeft="40dp"
-        android:paddingRight="40dp"
-        android:textSize="18sp" />
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"
+            android:src="@drawable/title2" />
 
-</FrameLayout>
+        <FrameLayout
+            android:id="@+id/titleCharacterContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <ImageButton
+            android:id="@+id/btnSettings"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="top|right"
+            android:layout_marginTop="20dp"
+            android:layout_marginRight="20dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_manage"
+            android:contentDescription="Settings" />
+
+        <Button
+            android:id="@+id/button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Start Game"
+            android:onClick="onBtnStartGame"
+            android:layout_gravity="center_horizontal|bottom"
+            android:layout_marginBottom="30dp"
+            android:paddingLeft="40dp"
+            android:paddingRight="40dp"
+            android:textSize="18sp" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/settingDrawer"
+        android:layout_width="320dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:background="#E61A1A24"
+        android:clickable="true"
+        android:focusable="true"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SETTINGS"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="32dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="BGM Volume"
+            android:textColor="#BBBBBB"
+            android:textSize="14sp" />
+        <SeekBar
+            android:id="@+id/sbBgmVolume"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="24dp"
+            android:max="100"
+            android:progress="70" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SFX Volume"
+            android:textColor="#BBBBBB"
+            android:textSize="14sp" />
+        <SeekBar
+            android:id="@+id/sbSfxVolume"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:max="100"
+            android:progress="80" />
+    </LinearLayout>
+
+</androidx.drawerlayout.widget.DrawerLayout>
