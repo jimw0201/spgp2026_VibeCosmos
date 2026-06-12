@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import kr.ac.tukorea.jmw.vibecosmos.game.data.SongConfig
 import kr.ac.tukorea.jmw.vibecosmos.R
 import kr.ac.tukorea.jmw.vibecosmos.databinding.ActivitySongSelectBinding
+import kr.ac.tukorea.jmw.vibecosmos.game.manager.SongCatalog
 import kr.ac.tukorea.jmw.vibecosmos.game.manager.SoundManager
 
 class SongSelectActivity : AppCompatActivity() {
@@ -15,20 +16,32 @@ class SongSelectActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         binding = ActivitySongSelectBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 곡 데이터 생성 (제목, 음원, 배경, 채보 파일명, 속도)
-        val song1 = SongConfig("Fly↑High", "music1", "stage_bg1", "chart1.txt", 600f)
-        val song2 = SongConfig("Test 2", "title", "stage_bg2", "chart2.txt", 900f)
+        if (SongCatalog.songs.isEmpty()) {
+            SongCatalog.load(this.assets)
+        }
 
-        // 각각의 곡 선택 버튼 클릭 시 해당 곡 정보를 넘기며 게임 화면으로 이동
-        binding.btnSong1.setOnClickListener { startGame(song1) }
-        binding.btnSong2.setOnClickListener { startGame(song2) }
+        val songList = SongCatalog.songs
+
+        if (songList.isNotEmpty()) {
+            if (songList.size > 0) {
+                val song1 = songList[0]
+                binding.btnSong1.text = song1.title
+                binding.btnSong1.setOnClickListener { startGame(song1) }
+            }
+
+            if (songList.size > 1) {
+                val song2 = songList[1]
+                binding.btnSong2.text = song2.title
+                binding.btnSong2.setOnClickListener { startGame(song2) }
+            }
+        } else {
+            android.util.Log.e("SONG_DEBUG", "songs.json 로드 실패 혹은 파싱 실패로 데이터가 비어있습니다!")
+        }
     }
 
-    // 게임 액티비티를 시작하는 함수
     private fun startGame(config: SongConfig) {
         stopAndReleaseMediaPlayer()
         val intent = Intent(this, VibeCosmosActivity::class.java).apply {
