@@ -5,7 +5,6 @@ import kr.ac.tukorea.jmw.a2dg.activity.BaseGameActivity
 import kr.ac.tukorea.jmw.a2dg.scene.Scene
 import kr.ac.tukorea.jmw.a2dg.view.GameContext
 import kr.ac.tukorea.jmw.vibecosmos.BuildConfig
-import kr.ac.tukorea.jmw.vibecosmos.R
 import kr.ac.tukorea.jmw.vibecosmos.game.data.SongConfig
 import kr.ac.tukorea.jmw.vibecosmos.game.main.MainScene
 

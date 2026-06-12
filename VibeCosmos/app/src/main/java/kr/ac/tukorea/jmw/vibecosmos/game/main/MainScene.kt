@@ -1,6 +1,9 @@
 package kr.ac.tukorea.jmw.vibecosmos.game.main
 
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
 import android.view.MotionEvent
 import kr.ac.tukorea.jmw.a2dg.scene.Scene
 import kr.ac.tukorea.jmw.a2dg.view.GameContext
@@ -14,12 +17,11 @@ import kr.ac.tukorea.jmw.vibecosmos.game.manager.SoundManager
 import android.media.MediaPlayer
 import android.util.Log
 import kr.ac.tukorea.jmw.vibecosmos.app.ScoreResultActivity
-import kotlin.jvm.java
+import kr.ac.tukorea.jmw.vibecosmos.app.SongSelectActivity
+import kr.ac.tukorea.jmw.vibecosmos.app.VibeCosmosActivity
 
 class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
-    enum class Layer {
-        BG, NOTES, PLAYER, UI
-    }
+    enum class Layer { BG, NOTES, PLAYER, UI }
 
     override val clipsRect = true
 
@@ -39,17 +41,37 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
 
     private var isUpLaneHolding = false
     private var isDownLaneHolding = false
-
     private var upLaneTouchStartMs = 0L
     private var downLaneTouchStartMs = 0L
 
     private var isStageFinished = false
+    private var isGameOverFailed = false
     private var finishTimerMs = 0L
     private val DELAY_BEFORE_RESULT_MS = 3000L
 
+    private val failDimPaint = Paint().apply { color = Color.parseColor("#D90C0C14") }
+    private val failTextPaint = Paint().apply {
+        color = Color.parseColor("#FF5252")
+        textSize = 80f
+        style = Paint.Style.FILL
+        textAlign = Paint.Align.CENTER
+        isAntiAlias = true
+    }
+    private val btnTextPaint = Paint().apply {
+        color = Color.WHITE
+        textSize = 32f
+        textAlign = Paint.Align.CENTER
+        isAntiAlias = true
+    }
+
+    private val btnRetryPaint = Paint().apply { color = Color.parseColor("#252535") }
+    private val btnSelectPaint = Paint().apply { color = Color.parseColor("#FF5252") }
+
+    private val rectRetryBtn = RectF()
+    private val rectSelectBtn = RectF()
+
     init {
         val context = gctx.view.context
-
         val musicResId = config.getMusicResId(context)
         mediaPlayer = MediaPlayer.create(context, musicResId).apply {
             isLooping = false
@@ -61,15 +83,8 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
     override val world = World(Layer.entries.toTypedArray()).apply {
         val context = gctx.view.context
         val bgResId = config.getBgResId(context)
-
-        listOf(
-            bgResId to -150f,
-            R.mipmap.stage_bg3 to -200f,
-            R.mipmap.stage_bg2 to -150f,
-        ).forEach { (resId, speed) ->
-            if (resId != 0) { // 리소스 검색 실패 방어를 위한 분기
-                add(HorzScrollBackground(gctx, resId, speed), Layer.BG)
-            }
+        listOf(bgResId to -150f, R.mipmap.stage_bg3 to -200f, R.mipmap.stage_bg2 to -150f).forEach { (resId, speed) ->
+            if (resId != 0) add(HorzScrollBackground(gctx, resId, speed), Layer.BG)
         }
         add(player, Layer.PLAYER)
         noteManager = NoteManager(gctx, this, config)
@@ -78,6 +93,39 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
     override fun draw(canvas: android.graphics.Canvas) {
         super.draw(canvas)
         hud.draw(canvas, scoreManager, player)
+
+        if (isGameOverFailed) {
+            val width = gctx.metrics.width
+            val height = gctx.metrics.height
+
+            canvas.drawRect(0f, 0f, width, height, failDimPaint)
+
+            canvas.drawText("TRACK FAILED", width / 2f, height / 2f - 60f, failTextPaint)
+
+            val btnWidth = 320f
+            val btnHeight = 90f
+            val centerY = height / 2f + 100f
+
+            rectRetryBtn.set(
+                width / 2f - btnWidth - 40f,
+                centerY - btnHeight / 2f,
+                width / 2f - 40f,
+                centerY + btnHeight / 2f
+            )
+
+            rectSelectBtn.set(
+                width / 2f + 40f,
+                centerY - btnHeight / 2f,
+                width / 2f + btnWidth + 40f,
+                centerY + btnHeight / 2f
+            )
+
+            canvas.drawRoundRect(rectRetryBtn, 25f, 25f, btnRetryPaint)
+            canvas.drawRoundRect(rectSelectBtn, 25f, 25f, btnSelectPaint)
+
+            canvas.drawText("RETRY", rectRetryBtn.centerX(), rectRetryBtn.centerY() + 12f, btnTextPaint)
+            canvas.drawText("SONG SELECT", rectSelectBtn.centerX(), rectSelectBtn.centerY() + 12f, btnTextPaint)
+        }
     }
 
     private var isReadySoundPlayed = false
@@ -89,10 +137,14 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
 
         val now = System.currentTimeMillis()
 
-        if (!isReadyStarted) {
-            sceneStartTime = now
-            isReadyStarted = true
+        if (!isReadyStarted) { sceneStartTime = now; isReadyStarted = true }
+
+        if (!isStageFinished && !isGameOverFailed && player.hp <= 0) {
+            triggerGameOver()
+            return
         }
+
+        if (isGameOverFailed) return
 
         val timePassed = now - sceneStartTime
         if (timePassed >= 400L && !isReadySoundPlayed) {
@@ -111,15 +163,10 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
 
         val currentMusicPos = if (isMusicStarted) {
             mediaPlayer?.currentPosition?.toLong() ?: relativeTime
-        } else {
-            relativeTime
-        }
+        } else { relativeTime }
 
         if (!isStageFinished) {
-            noteManager.update(currentMusicPos) {
-                scoreManager.onMiss()
-            }
-
+            noteManager.update(currentMusicPos) { scoreManager.onMiss() }
             checkPlayerCollision()
             checkLongNoteHold(elapsedSeconds)
 
@@ -136,25 +183,28 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
         }
     }
 
-    private fun navigateToResultScreen() {
-        val context = gctx.view.context
-
+    private fun triggerGameOver() {
+        isStageFinished = true
+        isGameOverFailed = true
         mediaPlayer?.let {
             if (it.isPlaying) it.stop()
             it.release()
         }
         mediaPlayer = null
-
         soundManager.release()
+    }
 
+    private fun navigateToResultScreen() {
+        val context = gctx.view.context
+        mediaPlayer?.let { if (it.isPlaying) it.stop(); it.release() }
+        mediaPlayer = null
+        soundManager.release()
         val activity = context as? android.app.Activity
-
         activity?.runOnUiThread {
             val intent = Intent(activity, ScoreResultActivity::class.java).apply {
                 putExtra("FINAL_SCORE", scoreManager.score)
                 putExtra("MAX_COMBO", scoreManager.maxCombo)
                 putExtra("SELECTED_SONG", config)
-
                 putExtra("PERFECT_COUNT", scoreManager.perfectCount)
                 putExtra("GREAT_COUNT", scoreManager.greatCount)
                 putExtra("MISS_COUNT", scoreManager.missCount)
@@ -167,18 +217,14 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
     private fun checkPlayerCollision() {
         val notes = world.objectsAt(Layer.NOTES).toMutableList()
         val it = notes.iterator()
-
         while (it.hasNext()) {
             val note = it.next() as? Note ?: continue
-
             if (android.graphics.RectF.intersects(player.collisionRect, note.collisionRect)) {
-
                 if (note.isLongNote) {
                     if (!note.isHolding) {
                         soundManager.playDamage()
                         player.hp -= 10
                         scoreManager.resetCombo()
-
                         world.remove(note, Layer.NOTES)
                     }
                 } else {
@@ -194,61 +240,37 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
     private fun checkLongNoteHold(elapsedSeconds: Float) {
         val notes = world.objectsAt(Layer.NOTES).toMutableList()
         var anyNoteHolding = false
-
         for (obj in notes) {
             val note = obj as? Note ?: continue
             if (!note.isLongNote) continue
-
             val noteLengthPx = note.speed * (note.lengthMs / 1000f)
             val noteHeadX = note.x
             val noteTailX = noteHeadX + noteLengthPx
 
             if (TARGET_X in noteHeadX..noteTailX) {
-                val isTouchMovingOrHolding =
-                    if (note.lane == Player.State.UP_ATK) isUpLaneHolding else isDownLaneHolding
-
+                val isTouchMovingOrHolding = if (note.lane == Player.State.UP_ATK) isUpLaneHolding else isDownLaneHolding
                 if (isTouchMovingOrHolding && note.isHitValidated) {
                     scoreManager.addHoldScore(elapsedSeconds)
-                    anyNoteHolding = true
-                    note.isHolding = true
-
-                    if (player.state != Player.State.HOLD_ATK) {
-                        player.state = Player.State.HOLD_ATK
-                    }
-
+                    anyNoteHolding = true; note.isHolding = true
+                    if (player.state != Player.State.HOLD_ATK) player.state = Player.State.HOLD_ATK
                     val targetY = if (note.lane == Player.State.UP_ATK) 300f else 500f
                     player.setCenter(player.x, targetY)
                 } else {
                     if (note.isHolding) {
-                        note.isHolding = false
-                        scoreManager.onMiss()
-                        world.remove(note, Layer.NOTES)
-                        continue
+                        note.isHolding = false; scoreManager.onMiss()
+                        world.remove(note, Layer.NOTES); continue
                     }
                 }
-            }
-
-            else if (noteTailX < TARGET_X) {
-                val isTouchMovingOrHolding =
-                    if (note.lane == Player.State.UP_ATK) isUpLaneHolding else isDownLaneHolding
-
+            } else if (noteTailX < TARGET_X) {
+                val isTouchMovingOrHolding = if (note.lane == Player.State.UP_ATK) isUpLaneHolding else isDownLaneHolding
                 if (note.isHolding) {
-                    if (isTouchMovingOrHolding) {
-                        note.isHolding = false
-                        scoreManager.onMiss()
-                        world.remove(note, Layer.NOTES)
-                    } else {
-                        note.isHolding = false
-                        world.remove(note, Layer.NOTES)
-                    }
-                    continue
+                    note.isHolding = false
+                    if (isTouchMovingOrHolding) scoreManager.onMiss()
+                    world.remove(note, Layer.NOTES); continue
                 }
             }
         }
-
-        if (!anyNoteHolding && player.state == Player.State.HOLD_ATK) {
-            player.state = Player.State.RUN
-        }
+        if (!anyNoteHolding && player.state == Player.State.HOLD_ATK) player.state = Player.State.RUN
     }
 
     private fun checkHit(attackState: Player.State) {
@@ -261,26 +283,17 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
             val note = obj as? Note ?: continue
             if (note.lane != attackState) continue
             val distance = Math.abs(note.x - TARGET_X)
-
             if (distance < MAX_HIT_DISTANCE && distance < minDistance) {
-                minDistance = distance
-                closestNote = note
+                minDistance = distance; closestNote = note
             }
         }
-
         if (closestNote != null) {
             if (closestNote.isLongNote) {
-                closestNote.isHitValidated = true
-
-                scoreManager.addScore(minDistance)
-                closestNote.isHolding = true
-                soundManager.playHit()
+                closestNote.isHitValidated = true; scoreManager.addScore(minDistance)
+                closestNote.isHolding = true; soundManager.playHit()
             } else {
                 val isHit = scoreManager.addScore(minDistance)
-                if (isHit) {
-                    soundManager.playHit()
-                    world.remove(closestNote, Layer.NOTES)
-                }
+                if (isHit) { soundManager.playHit(); world.remove(closestNote, Layer.NOTES) }
             }
         }
     }
@@ -288,113 +301,98 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
     private fun checkLongNoteRelease(attackState: Player.State) {
         val notes = world.objectsAt(Layer.NOTES)
         val MAX_RELEASE_DISTANCE = 150f
-
         for (obj in notes) {
             val note = obj as? Note ?: continue
             if (!note.isLongNote || note.lane != attackState || !note.isHolding) continue
-
             val noteLengthPx = note.speed * (note.lengthMs / 1000f)
             val noteTailX = note.x + noteLengthPx
-
             val distance = Math.abs(noteTailX - TARGET_X)
 
             if (distance <= MAX_RELEASE_DISTANCE) {
-                soundManager.playHit()
-                note.isHolding = false
-                world.remove(note, Layer.NOTES)
+                soundManager.playHit(); note.isHolding = false; world.remove(note, Layer.NOTES)
             } else {
-                note.isHolding = false
-                scoreManager.onMiss()
-                world.remove(note, Layer.NOTES)
+                note.isHolding = false; scoreManager.onMiss(); world.remove(note, Layer.NOTES)
             }
             break
         }
     }
 
-    // 채보 로그를 보려면 Logcat에서 CHART_MAKER 검색
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        val activity = gctx.view.context as? android.app.Activity
+
+        if (isGameOverFailed) {
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                val gameX = event.x * (gctx.metrics.width / gctx.view.width.toFloat())
+                val gameY = event.y * (gctx.metrics.height / gctx.view.height.toFloat())
+
+                if (rectRetryBtn.contains(gameX, gameY)) {
+                    val intent = Intent(activity, VibeCosmosActivity::class.java).apply {
+                        putExtra("SELECTED_SONG", config)
+                    }
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    activity?.startActivity(intent)
+                    activity?.finish()
+                }
+                else if (rectSelectBtn.contains(gameX, gameY)) {
+                    val intent = Intent(activity, SongSelectActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    activity?.startActivity(intent)
+                    activity?.finish()
+                }
+            }
+            return true
+        }
+
+        if (isStageFinished) return true
+
         val screenCenter = gctx.view.width / 2
         val isRightSide = event.x > screenCenter
 
         val now = System.currentTimeMillis()
         val currentMusicTime = if (isMusicStarted) {
             mediaPlayer?.currentPosition?.toLong() ?: (now - sceneStartTime - READY_DURATION)
-        } else {
-            now - sceneStartTime - READY_DURATION
-        }
+        } else { now - sceneStartTime - READY_DURATION }
 
         val isRecordable = currentMusicTime >= 0
 
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
                 if (isRightSide) {
-                    isDownLaneHolding = true
-                    soundManager.playSwingDown()
-
-                    if (player.state != Player.State.HOLD_ATK) {
-                        player.attackDown(forceReset = true)
-                    }
-
+                    isDownLaneHolding = true; soundManager.playSwingDown()
+                    if (player.state != Player.State.HOLD_ATK) player.attackDown(forceReset = true)
                     checkHit(Player.State.DOWN_ATK)
                     if (isRecordable) downLaneTouchStartMs = currentMusicTime
                 } else {
-                    isUpLaneHolding = true
-                    soundManager.playSwingUp()
-
-                    if (player.state != Player.State.HOLD_ATK) {
-                        player.attackUp(forceReset = true)
-                    }
-
+                    isUpLaneHolding = true; soundManager.playSwingUp()
+                    if (player.state != Player.State.HOLD_ATK) player.attackUp(forceReset = true)
                     checkHit(Player.State.UP_ATK)
                     if (isRecordable) upLaneTouchStartMs = currentMusicTime
                 }
             }
-
             MotionEvent.ACTION_MOVE -> {
-                if (isRightSide) {
-                    isDownLaneHolding = true
-                    isUpLaneHolding = false
-                } else {
-                    isUpLaneHolding = true
-                    isDownLaneHolding = false
-                }
+                if (isRightSide) { isDownLaneHolding = true; isUpLaneHolding = false }
+                else { isUpLaneHolding = true; isDownLaneHolding = false }
             }
-
             MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_CANCEL -> {
                 if (isRightSide) {
-                    isDownLaneHolding = false
-
-                    checkLongNoteRelease(Player.State.DOWN_ATK)
-
+                    isDownLaneHolding = false; checkLongNoteRelease(Player.State.DOWN_ATK)
                     if (isRecordable && downLaneTouchStartMs > 0) {
                         val duration = currentMusicTime - downLaneTouchStartMs
-                        if (duration < 300) {
-                            Log.d("CHART_MAKER", "$downLaneTouchStartMs | 1")
-                        } else {
-                            Log.d("CHART_MAKER", "$downLaneTouchStartMs | 1 | $duration")
-                        }
+                        if (duration < 300) Log.d("CHART_MAKER", "$downLaneTouchStartMs | 1")
+                        else Log.d("CHART_MAKER", "$downLaneTouchStartMs | 1 | $duration")
                         downLaneTouchStartMs = 0L
                     }
                 } else {
-                    isUpLaneHolding = false
-
-                    checkLongNoteRelease(Player.State.UP_ATK)
-
+                    isUpLaneHolding = false; checkLongNoteRelease(Player.State.UP_ATK)
                     if (isRecordable && upLaneTouchStartMs > 0) {
                         val duration = currentMusicTime - upLaneTouchStartMs
-                        if (duration < 300) {
-                            Log.d("CHART_MAKER", "$upLaneTouchStartMs | 0")
-                        } else {
-                            Log.d("CHART_MAKER", "$upLaneTouchStartMs | 0 | $duration")
-                        }
+                        if (duration < 300) Log.d("CHART_MAKER", "$upLaneTouchStartMs | 0")
+                        else Log.d("CHART_MAKER", "$upLaneTouchStartMs | 0 | $duration")
                         upLaneTouchStartMs = 0L
                     }
                 }
-
                 if (!isUpLaneHolding && !isDownLaneHolding) {
-                    if (player.state == Player.State.HOLD_ATK) {
-                        player.state = Player.State.RUN
-                    }
+                    if (player.state == Player.State.HOLD_ATK) player.state = Player.State.RUN
                 }
             }
         }
