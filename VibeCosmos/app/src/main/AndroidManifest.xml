@@ -11,18 +11,30 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.VibeCosmos">
+
         <activity
             android:name=".app.SongSelectActivity"
+            android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="false" />
+
         <activity
             android:name=".app.VibeCosmosActivity"
+            android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="false" />
+
         <activity
             android:name=".app.ScoreResultActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="false" />
+
         <activity
             android:name=".app.MainActivity"
+            android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -30,6 +42,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
     </application>
 
 </manifest>

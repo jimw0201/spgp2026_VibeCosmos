@@ -72,8 +72,8 @@ class Hud {
     // 모든 UI 요소를 그리는 함수
     fun draw(canvas: Canvas, scoreManager: ScoreManager, player: Player, musicProgress: Float) {
 
-        val startX = 300f
-        val endX = 1300f
+        val startX = 500f
+        val endX = 1500f
         val gaugeTop = 30f
         val gaugeBottom = 44f
         val roundRadius = 7f
