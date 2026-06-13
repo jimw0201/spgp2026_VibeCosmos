@@ -92,7 +92,21 @@ class MainScene(gctx: GameContext, val config: SongConfig) : Scene(gctx) {
 
     override fun draw(canvas: android.graphics.Canvas) {
         super.draw(canvas)
-        hud.draw(canvas, scoreManager, player)
+
+        val progress = if (isMusicStarted) {
+            val player = mediaPlayer
+            if (player != null) {
+                val total = player.duration.toFloat()
+                val current = player.currentPosition.toFloat()
+                if (total > 0f) (current / total) else 0f
+            } else {
+                0f
+            }
+        } else {
+            0f
+        }.coerceIn(0f, 1f)
+
+        hud.draw(canvas, scoreManager, player, progress)
 
         if (isGameOverFailed) {
             val width = gctx.metrics.width

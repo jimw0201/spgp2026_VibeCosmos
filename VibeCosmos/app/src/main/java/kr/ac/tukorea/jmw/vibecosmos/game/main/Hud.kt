@@ -3,6 +3,7 @@ package kr.ac.tukorea.jmw.vibecosmos.game.main
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.RectF
 import kr.ac.tukorea.jmw.vibecosmos.game.manager.ScoreManager
 
 class Hud {
@@ -48,13 +49,44 @@ class Hud {
         textAlign = Paint.Align.CENTER
     }
 
+    private val gaugeBgPaint = Paint().apply {
+        color = Color.parseColor("#444444")
+        style = Paint.Style.FILL
+        isAntiAlias = true
+    }
+
+    private val gaugeFillPaint = Paint().apply {
+        color = Color.parseColor("#00FFCC")
+        style = Paint.Style.FILL
+        isAntiAlias = true
+    }
+
+    private val rectGaugeBg = RectF()
+    private val rectGaugeFill = RectF()
+
     // 그리기 기준 좌표
     private val TARGET_X = 400f
     private val UPPER_LANE_Y = 300f
     private val LOWER_LANE_Y = 500f
 
     // 모든 UI 요소를 그리는 함수
-    fun draw(canvas: Canvas, scoreManager: ScoreManager, player: Player) {
+    fun draw(canvas: Canvas, scoreManager: ScoreManager, player: Player, musicProgress: Float) {
+
+        val startX = 300f
+        val endX = 1300f
+        val gaugeTop = 30f
+        val gaugeBottom = 44f
+        val roundRadius = 7f
+
+        rectGaugeBg.set(startX, gaugeTop, endX, gaugeBottom)
+        canvas.drawRoundRect(rectGaugeBg, roundRadius, roundRadius, gaugeBgPaint)
+
+        if (musicProgress > 0f) {
+            val fillEndX = startX + (endX - startX) * musicProgress
+            rectGaugeFill.set(startX, gaugeTop, fillEndX, gaugeBottom)
+            canvas.drawRoundRect(rectGaugeFill, roundRadius, roundRadius, gaugeFillPaint)
+        }
+
         // 점수 및 HP 표시
         canvas.drawText("Score: ${scoreManager.score}", 50f, 80f, scorePaint)
         canvas.drawText("HP: ${player.hp}", 800f, 850f, hpPaint)

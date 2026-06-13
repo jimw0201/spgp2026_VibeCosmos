@@ -9,9 +9,9 @@ import kr.ac.tukorea.jmw.vibecosmos.game.data.SongConfig
 import kr.ac.tukorea.jmw.vibecosmos.game.main.MainScene
 
 class VibeCosmosActivity : BaseGameActivity() {
-    override val drawsDebugGrid: Boolean = BuildConfig.DEBUG
-    override val drawsDebugInfo: Boolean = BuildConfig.DEBUG
-    override val drawsFpsGraph: Boolean = BuildConfig.DEBUG
+    //override val drawsDebugGrid: Boolean = BuildConfig.DEBUG
+    //override val drawsDebugInfo: Boolean = BuildConfig.DEBUG
+    //override val drawsFpsGraph: Boolean = BuildConfig.DEBUG
 
     override fun createRootScene(gctx: GameContext): Scene {
         val config = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

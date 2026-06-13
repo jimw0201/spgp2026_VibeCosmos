@@ -1,6 +1,7 @@
 package kr.ac.tukorea.jmw.vibecosmos.app
 
 import android.content.Intent
+import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.View
@@ -90,11 +91,25 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (mediaPlayer == null) {
-            mediaPlayer = MediaPlayer.create(this, R.raw.title).apply {
+            mediaPlayer = MediaPlayer().apply {
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build()
+                )
+                val afd = resources.openRawResourceFd(R.raw.title)
+                setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                afd.close()
                 isLooping = true
-                val currentVol = binding.sbBgmVolume.progress / 100f
-                setVolume(currentVol, currentVol)
-                start()
+                setOnPreparedListener {
+                    setVolume(0f, 0f)
+                    start()
+                    binding.root.postDelayed({
+                        val v = binding.sbBgmVolume.progress / 100f
+                        setVolume(v, v)
+                    }, 600)
+                }
+                prepareAsync()
             }
         } else if (!mediaPlayer!!.isPlaying) {
             mediaPlayer!!.start()
