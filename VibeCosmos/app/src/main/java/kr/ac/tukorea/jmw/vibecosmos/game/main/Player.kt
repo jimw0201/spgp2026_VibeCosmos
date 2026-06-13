@@ -20,11 +20,14 @@ class Player(gctx: GameContext): AnimSprite(
 
     override val collisionRect: RectF
         get() {
+            val slimW = (this.width / 2) * 0.8f
+            val halfH = this.height / 2
+
             fixedCollisionRect.set(
-                x - WIDTH / 2,
-                y - HEIGHT / 2,
-                x + WIDTH / 2,
-                y + HEIGHT / 2
+                x - slimW,
+                y - halfH,
+                x + slimW,
+                y + halfH
             )
             return fixedCollisionRect
         }

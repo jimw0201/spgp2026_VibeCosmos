@@ -66,10 +66,12 @@ class Note(gctx: GameContext) : Sprite(gctx, R.mipmap.air1), IRecyclable, IBoxCo
                 )
             } else {
                 val slimHalfH = halfH * 0.6f
+                val slimHalfW = halfW * 0.6f
+
                 fixedCollisionRect.set(
-                    x - halfW,
+                    x - slimHalfW,
                     y - slimHalfH,
-                    x + halfW,
+                    x + slimHalfW,
                     y + slimHalfH
                 )
             }
